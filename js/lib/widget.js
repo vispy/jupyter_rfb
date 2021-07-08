@@ -66,6 +66,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         this.model.on('change:resizable', this.on_resizable, this);
 
         // Keep track of size changes in JS, so we can notify the server
+        // TODO: use ResizeObserver instead: https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
         this._current_size = [0, 0, 1];
         this.el.addEventListener("resize", this.check_resize.bind(this));
         window.addEventListener("resize", this.check_resize.bind(this));
@@ -74,11 +75,11 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         // Mouse events
         this.el.addEventListener('mousedown', function (e) {
             that.send(create_pointer_event(that.el, e, "mouse_down"));
-            e.preventDefault();
+            if (!e.altKey) { e.preventDefault(); }
         });
         this.el.addEventListener('mouseup', function (e) {
             that.send(create_pointer_event(that.el, e, "mouse_up"));
-            e.preventDefault();
+            if (!e.altKey) { e.preventDefault(); }
         });
         // TODO: mouse move
         // TODO: wheel event

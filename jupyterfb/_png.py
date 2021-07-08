@@ -32,6 +32,8 @@ def array2png(array, file=None):
         array3[..., 1] = array
         array3[..., 2] = array
         array = array3
+    elif not array.flags.c_contiguous:
+        array = array.copy()
 
     # Check shape
     if not (len(shape) == 3 and shape[2] in (3, 4)):

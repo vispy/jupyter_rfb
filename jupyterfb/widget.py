@@ -11,6 +11,12 @@ from ._png import array2png
 # See js/lib/example.js for the frontend counterpart to this file.
 
 
+# todo: ...
+# - test speed of pillow vs current approach
+# - test speed of jpg (via pillow)
+# - look into rate limiting strategies like diff pngs
+
+
 class FrameSenderMixin:
 
     def __init__(self, *args, **kwargs):
