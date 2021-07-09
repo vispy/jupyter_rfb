@@ -58,11 +58,14 @@ setup_args = dict(
     cmdclass=cmdclass,
     author='Almar Klein',
     author_email='almar@almarklein.org',
+    license='MIT',
     url='https://github.com/vispy/jupyter_rfb',
     keywords=[
         'ipython',
         'jupyter',
         'widgets',
+        'visualization',
+        'remote frame buffer',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
