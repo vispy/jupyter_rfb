@@ -6,8 +6,8 @@ build/
 node_modules/
 
 # Compiled javascript
-jupyterfb/nbextension/
-jupyterfb/labextension/
+jupyter_rfb/nbextension/
+jupyter_rfb/labextension/
 
 # OS X
 .DS_Store

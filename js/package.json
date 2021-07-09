@@ -1,12 +1,12 @@
 {
-  "name": "jupyterfb",
+  "name": "jupyter_rfb",
   "version": "0.1.0",
-  "description": "Remote Frame Buffer for Jupyter widgets",
+  "description": "Remote Frame Buffer for Jupyter",
   "author": "Almar Klein",
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vispy/jupyterfb.git"
+    "url": "https://github.com/vispy/jupyter_rfb.git"
   },
   "keywords": [
     "jupyter",
@@ -20,7 +20,7 @@
     "dist/*.js"
   ],
   "scripts": {
-    "clean": "rimraf dist/ && rimraf ../jupyterfb/labextension/ && rimraf ../jupyterfb/nbextension",
+    "clean": "rimraf dist/ && rimraf ../jupyter_rfb/labextension/ && rimraf ../jupyter_rfb/nbextension",
     "prepublish": "yarn run clean && yarn run build:prod",
     "build": "webpack --mode=development && yarn run build:labextension:dev",
     "build:prod": "webpack --mode=production && yarn run build:labextension",
@@ -40,7 +40,7 @@
   },
   "jupyterlab": {
     "extension": "lib/labplugin",
-    "outputDir": "../jupyterfb/labextension",
+    "outputDir": "../jupyter_rfb/labextension",
     "sharedPackages": {
       "@jupyter-widgets/base": {
         "bundled": false,

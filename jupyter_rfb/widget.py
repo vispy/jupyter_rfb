@@ -69,10 +69,10 @@ class RemoteFrameBuffer(widgets.DOMWidget, FrameSenderMixin):
     _model_name = Unicode('RemoteFrameBufferModel').tag(sync=True)
 
     # Name of the front-end module containing widget view
-    _view_module = Unicode('jupyterfb').tag(sync=True)
+    _view_module = Unicode('jupyter_rfb').tag(sync=True)
 
     # Name of the front-end module containing widget model
-    _model_module = Unicode('jupyterfb').tag(sync=True)
+    _model_module = Unicode('jupyter_rfb').tag(sync=True)
 
     # Version of the front-end module containing widget view
     _view_module_version = Unicode('^0.1.0').tag(sync=True)

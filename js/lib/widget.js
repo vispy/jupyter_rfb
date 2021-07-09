@@ -24,8 +24,8 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         // Meta info
         _model_name : 'RemoteFrameBufferModel',
         _view_name : 'RemoteFrameBufferView',
-        _model_module : 'jupyterfb',
-        _view_module : 'jupyterfb',
+        _model_module : 'jupyter_rfb',
+        _view_module : 'jupyter_rfb',
         _model_module_version : '0.1.0',
         _view_module_version : '0.1.0',
         // For the frames
@@ -49,18 +49,18 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         this.img = document.createElement("img");
         this.img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAoklEQVR42u3PoQ3AQADDwN9/sm7V0qdVQGLJgUa581x7r1H6WTskoH3oN2DhRNIFtDsfsHAi6QLanQ9YOJF0Ae3OByycSLqAducDFk4kXUC78wELJ5IuoN35gIUTSRfQ7nzAwomkC2h3PmDhRNIFtDsfsHAi6QLanQ9YOJF0Ae3OByycSLqAducDFk4kXUC78wELJ5IuoN35gIUTSRfQ7njAB3//qnevFJyZAAAAAElFTkSuQmCC";
         this.el.appendChild(this.img);
-        
+
         // Receive custom messages (i.e. new image data)
         this.model.on('msg:custom', this.on_msg, this);
 
         // Initialize sizing. Setting the this.el's size right now has no effect for some reason, so we use a timer.
         this.on_resizable();
         this.img.style.width = "100%";
-        this.img.style.height = "100%"; 
+        this.img.style.height = "100%";
         window.setTimeout(() => { this.el.style.width = this.model.get('css_width'); }, 1);
         window.setTimeout(() => { this.el.style.height = this.model.get('css_height'); }, 1);
 
-        // Keep track of size changes from the server        
+        // Keep track of size changes from the server
         this.model.on('change:css_width', function () { this.el.style.width = this.model.get('css_width'); }, this);
         this.model.on('change:css_height', function () { this.el.style.height = this.model.get('css_height'); }, this);
         this.model.on('change:resizable', this.on_resizable, this);
@@ -96,7 +96,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             that.send(create_pointer_event(that.el, e, "touch_move"));
         });
     },
-    
+
     on_msg: function(msg, buffers) {
         if (msg.type == "framebufferdata") {
             // Update image (it's an in-line image)
@@ -168,7 +168,7 @@ function create_pointer_event(el, e, event_type) {
 
     // note: our button has a value as in JS "which"
     modifiers = ["Alt", "Shift", "Ctrl", "Meta"].filter((n) => e[n.toLowerCase() + 'Key']);
-    
+
     // Create event dict
     return {
         event_type: event_type,

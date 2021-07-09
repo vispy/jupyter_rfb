@@ -6,7 +6,7 @@ import os
 import sys
 import tempfile
 
-from jupyterfb._png import array2png
+from jupyter_rfb._png import array2png
 import numpy as np
 from pytest import raises
 

@@ -1,4 +1,4 @@
-Remote Frame Buffer for Jupyter widgets
+Remote Frame Buffer for Jupyter
 
 Package Install
 ---------------
@@ -7,5 +7,5 @@ Package Install
 - [node](http://nodejs.org/)
 
 ```bash
-npm install --save jupyterfb
+npm install --save jupyter_rfb
 ```

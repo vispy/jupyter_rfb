@@ -19,10 +19,10 @@ log.set_verbosity(log.DEBUG)
 log.info('setup.py entered')
 log.info('$PATH=%s' % os.environ['PATH'])
 
-name = 'jupyterfb'
-LONG_DESCRIPTION = 'Remote Frame Buffer for Jupyter widgets'
+name = 'jupyter_rfb'
+LONG_DESCRIPTION = 'Remote Frame Buffer for Jupyter'
 
-# Get jupyterfb version
+# Get jupyter_rfb version
 version = get_version(pjoin(name, '_version.py'))
 
 js_dir = pjoin(here, 'js')
@@ -33,10 +33,10 @@ jstargets = [
 ]
 
 data_files_spec = [
-    ('share/jupyter/nbextensions/jupyterfb', 'jupyterfb/nbextension', '*.*'),
-    ('share/jupyter/labextensions/jupyterfb', 'jupyterfb/labextension', '**'),
-    ('share/jupyter/labextensions/jupyterfb', '.', 'install.json'),
-    ('etc/jupyter/nbconfig/notebook.d', '.', 'jupyterfb.json'),
+    ('share/jupyter/nbextensions/jupyter_rfb', 'jupyter_rfb/nbextension', '*.*'),
+    ('share/jupyter/labextensions/jupyter_rfb', 'jupyter_rfb/labextension', '**'),
+    ('share/jupyter/labextensions/jupyter_rfb', '.', 'install.json'),
+    ('etc/jupyter/nbconfig/notebook.d', '.', 'jupyter_rfb.json'),
 ]
 
 cmdclass = create_cmdclass('jsdeps', data_files_spec=data_files_spec)
@@ -47,7 +47,7 @@ cmdclass['jsdeps'] = combine_commands(
 setup_args = dict(
     name=name,
     version=version,
-    description='Remote Frame Buffer for Jupyter widgets',
+    description='Remote Frame Buffer for Jupyter',
     long_description=LONG_DESCRIPTION,
     include_package_data=True,
     install_requires=[
@@ -58,7 +58,7 @@ setup_args = dict(
     cmdclass=cmdclass,
     author='Almar Klein',
     author_email='almar@almarklein.org',
-    url='https://github.com/vispy/jupyterfb',
+    url='https://github.com/vispy/jupyter_rfb',
     keywords=[
         'ipython',
         'jupyter',

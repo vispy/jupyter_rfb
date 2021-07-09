@@ -18,7 +18,7 @@ def _jupyter_labextension_paths():
     """
     return [{
         'src': 'labextension',
-        'dest': 'jupyterfb',
+        'dest': 'jupyter_rfb',
     }]
 
 
@@ -42,6 +42,6 @@ def _jupyter_nbextension_paths():
     return [{
         'section': 'notebook',
         'src': 'nbextension',
-        'dest': 'jupyterfb',
-        'require': 'jupyterfb/extension'
+        'dest': 'jupyter_rfb',
+        'require': 'jupyter_rfb/extension'
     }]

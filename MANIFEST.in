@@ -1,11 +1,11 @@
-graft jupyterfb/nbextension
-graft jupyterfb/labextension
+graft jupyter_rfb/nbextension
+graft jupyter_rfb/labextension
 
 graft js
 graft tests
 prune **/node_modules
 
-include jupyterfb.json
+include jupyter_rfb.json
 
 include LICENSE
 include setup.py
