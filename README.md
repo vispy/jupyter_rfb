@@ -28,7 +28,7 @@ On older versions of Jupyter notebook/lab an extra step might be needed
 to enable the widget. TODO
 
 
-## Developers
+## Development installation
 
 For a development installation (requires [Node.js](https://nodejs.org) and [Yarn version 1](https://classic.yarnpkg.com/)),
 
@@ -48,6 +48,11 @@ Then you need to rebuild the JS when you make a code change:
     $ yarn run build
 
 You then need to refresh the JupyterLab page when your javascript changes.
+
+
+## Developer notes
+
+The code is autoformatted with `black .` and linted with `flake8 .`.
 
 
 ## License
