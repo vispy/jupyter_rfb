@@ -8,15 +8,6 @@ import tornado
 from ._png import array2png
 
 
-# See js/lib/example.js for the frontend counterpart to this file.
-
-
-# todo: ...
-# - test speed of pillow vs current approach
-# - test speed of jpg (via pillow)
-# - look into rate limiting strategies like diff pngs
-
-
 class FrameSenderMixin:
 
     def __init__(self, *args, **kwargs):
@@ -40,22 +31,24 @@ class FrameSenderMixin:
                     self._send_frame(self._pending_frames.pop(0))
 
     def _send_frame(self, array):
-            timestamp = time.time()
-            self._send_frames += 1
+        """ Actually send a frame over to the client.
+        """
+        timestamp = time.time()
+        self._send_frames += 1
 
-            # Turn array into a based64-encoded PNG
-            png_data = array2png(array)
-            preamble = "data:image/png;base64,"
-            src = preamble + encodebytes(png_data).decode()
+        # Turn array into a based64-encoded PNG
+        png_data = array2png(array)
+        preamble = "data:image/png;base64,"
+        src = preamble + encodebytes(png_data).decode()
 
-            # Compose message and send
-            msg = dict(
-                type="framebufferdata",
-                src=src,
-                index=self._send_frames,
-                timestamp=timestamp,
-            )
-            self.send(msg)
+        # Compose message and send
+        msg = dict(
+            type="framebufferdata",
+            src=src,
+            index=self._send_frames,
+            timestamp=timestamp,
+        )
+        self.send(msg)
 
 
 @widgets.register
@@ -92,7 +85,8 @@ class RemoteFrameBuffer(widgets.DOMWidget, FrameSenderMixin):
         self.on_msg(self._receive_events)
 
     def _receive_events(self, widget, content, buffers):
-        print(content)
+        pass
+        # print(content)
         # if content['msg_type'] == 'init':
         #     self.canvas_backend._reinit_widget()
         # elif content['msg_type'] == 'events':
