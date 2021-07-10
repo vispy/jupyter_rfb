@@ -55,7 +55,9 @@ jobs:
         with:
           python-version: ${{ matrix.pyversion }}
       - name: Setup node
-          uses: actions/setup-node@v2
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
       - name: Install dependencies (lint and docs)
         if: matrix.dolint == 1
         shell: bash
