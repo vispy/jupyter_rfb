@@ -47,11 +47,14 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
 
         // Create image element
         this.img = document.createElement("img");
-        this.img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAoklEQVR42u3PoQ3AQADDwN9/sm7V0qdVQGLJgUa581x7r1H6WTskoH3oN2DhRNIFtDsfsHAi6QLanQ9YOJF0Ae3OByycSLqAducDFk4kXUC78wELJ5IuoN35gIUTSRfQ7nzAwomkC2h3PmDhRNIFtDsfsHAi6QLanQ9YOJF0Ae3OByycSLqAducDFk4kXUC78wELJ5IuoN35gIUTSRfQ7njAB3//qnevFJyZAAAAAElFTkSuQmCC";
+        this.img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mOor68HAAL+AX6E2KOJAAAAAElFTkSuQmCC";
         this.el.appendChild(this.img);
-
+        
         // Receive custom messages (i.e. new image data)
         this.model.on('msg:custom', this.on_msg, this);
+        
+        // Set of throttler functions to send events at a friendly pace
+        this._throttlers = {};
 
         // Initialize sizing. Setting the this.el's size right now has no effect for some reason, so we use a timer.
         this.on_resizable();
@@ -66,34 +69,44 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         this.model.on('change:resizable', this.on_resizable, this);
 
         // Keep track of size changes in JS, so we can notify the server
-        // TODO: use ResizeObserver instead: https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
         this._current_size = [0, 0, 1];
-        this.el.addEventListener("resize", this.check_resize.bind(this));
-        window.addEventListener("resize", this.check_resize.bind(this));
-        window.setInterval(this.check_resize.bind(this), 500);
-
+        this._resizeObserver = new ResizeObserver(this.check_resize.bind(that));
+        this._resizeObserver.observe(this.img);
+        window.addEventListener("resize", this.check_resize.bind(this));       
+        
+        // Prevent context menu on RMB. Firefox still shows it when shift is pressed. It seems
+        // impossible to override this, so let's make this the actual behavior.
+        this.img.oncontextmenu = function(e) { if (!e.shiftKey) { e.preventDefault(); e.stopPropagation(); return false; }};
+        
         // Mouse events
-        this.el.addEventListener('mousedown', function (e) {
-            that.send(create_pointer_event(that.el, e, "mouse_down"));
+        this.img.addEventListener('mousedown', function (e) {
+            let event = create_pointer_event(that.img, e, "mouse_down");
+            that.send(event);
             if (!e.altKey) { e.preventDefault(); }
         });
-        this.el.addEventListener('mouseup', function (e) {
-            that.send(create_pointer_event(that.el, e, "mouse_up"));
+        this.img.addEventListener('mouseup', function (e) {
+            let event = create_pointer_event(that.img, e, "mouse_up");
+            that.send(event);
+            if (!e.altKey) { e.preventDefault(); }
+        });
+        this.img.addEventListener('click', function (e) {
+            let event = create_pointer_event(that.img, e, "click");
+            that.send(event);
             if (!e.altKey) { e.preventDefault(); }
         });
         // TODO: mouse move
         // TODO: wheel event
-        this.el.addEventListener('touchstart', function (e) {
-            that.send(create_pointer_event(that.el, e, "touch_down"));
+        this.img.addEventListener('touchstart', function (e) {
+            that.send(create_pointer_event(that.img, e, "touch_down"));
         });
-        this.el.addEventListener('touchend', function (e) {
-            that.send(create_pointer_event(that.el, e, "touch_up"));
+        this.img.addEventListener('touchend', function (e) {
+            that.send(create_pointer_event(that.img, e, "touch_up"));
         });
-        this.el.addEventListener('touchcancel', function (e) {
-            that.send(create_pointer_event(that.el, e, "touch_up"));
+        this.img.addEventListener('touchcancel', function (e) {
+            that.send(create_pointer_event(that.img, e, "touch_up"));
         });
-        this.el.addEventListener('touchmove', function (e) {
-            that.send(create_pointer_event(that.el, e, "touch_move"));
+        this.img.addEventListener('touchmove', function (e) {
+            that.send(create_pointer_event(that.img, e, "touch_move"));
         });
     },
 
@@ -117,14 +130,52 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         let w = this.img.clientWidth;
         let h = this.img.clientHeight;
         let r = window.devicePixelRatio;
+        if (w == 0 && h == 0) { return; }
         if (this._current_size[0] != w || this._current_size[1] != h || this._current_size[2] != r) {
             this._current_size = [w, h, r];
-            this.send({event_type: 'resize', width: w, height: h, pixel_ratio: r});
+            this.send_throttled({event_type: 'resize', width: w, height: h, pixel_ratio: r}, 500);
         }
     },
-
+    
+    send_throttled: function(msg, wait) {
+        let event_type = msg.event_type || "";        
+        let func = this._throttlers[event_type];
+        if (func === undefined) {
+            func = throttled(this.send, wait || 200);
+            this._throttlers[event_type] = func;
+        }
+        func.call(this, msg);
+    },
 
 });
+
+
+function throttled(func, wait) {
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    var later = function() {
+        previous = Date.now();
+        timeout = null;
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+    };    
+    return function() {
+      var now = Date.now();
+      var remaining = wait - (now - previous);
+      context = this;
+      args = arguments;
+      if (remaining <= 0 || remaining > wait) {
+            if (timeout) { clearTimeout(timeout); timeout = null; }
+            previous = now;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+      } else if (!timeout) {
+          timeout = setTimeout(later, remaining);
+      }
+      return result;
+    };
+}
 
 
 function create_pointer_event(el, e, event_type) {
