@@ -8,6 +8,7 @@ node_modules/
 # Compiled javascript
 jupyter_rfb/nbextension/
 jupyter_rfb/labextension/
+js/yarn.lock
 
 # OS X
 .DS_Store
