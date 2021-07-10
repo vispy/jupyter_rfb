@@ -1,6 +1,5 @@
-from ._version import version_info, __version__
-
-from .widget import RemoteFrameBuffer
+from ._version import version_info, __version__  # noqa: F401
+from .widget import RemoteFrameBuffer  # noqa: F401
 
 
 def _jupyter_labextension_paths():
@@ -16,10 +15,12 @@ def _jupyter_labextension_paths():
         from `src` directory into <jupyter path>/labextensions/<dest> directory
         during widget installation
     """
-    return [{
-        'src': 'labextension',
-        'dest': 'jupyter_rfb',
-    }]
+    return [
+        {
+            "src": "labextension",
+            "dest": "jupyter_rfb",
+        }
+    ]
 
 
 def _jupyter_nbextension_paths():
@@ -39,9 +40,11 @@ def _jupyter_nbextension_paths():
     require: Path to importable AMD Javascript module inside the
         <jupyter path>/nbextensions/<dest> directory
     """
-    return [{
-        'section': 'notebook',
-        'src': 'nbextension',
-        'dest': 'jupyter_rfb',
-        'require': 'jupyter_rfb/extension'
-    }]
+    return [
+        {
+            "section": "notebook",
+            "src": "nbextension",
+            "dest": "jupyter_rfb",
+            "require": "jupyter_rfb/extension",
+        }
+    ]

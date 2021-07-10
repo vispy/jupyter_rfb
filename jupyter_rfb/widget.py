@@ -9,7 +9,6 @@ from ._png import array2png
 
 
 class FrameSenderMixin:
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._received_frames = 0
@@ -31,8 +30,7 @@ class FrameSenderMixin:
                     self._send_frame(self._pending_frames.pop(0))
 
     def _send_frame(self, array):
-        """ Actually send a frame over to the client.
-        """
+        """Actually send a frame over to the client."""
         timestamp = time.time()
         self._send_frames += 1
 
@@ -56,21 +54,21 @@ class RemoteFrameBuffer(widgets.DOMWidget, FrameSenderMixin):
     """Widget that shows a remote frame buffer."""
 
     # Name of the widget view class in front-end
-    _view_name = Unicode('RemoteFrameBufferView').tag(sync=True)
+    _view_name = Unicode("RemoteFrameBufferView").tag(sync=True)
 
     # Name of the widget model class in front-end
-    _model_name = Unicode('RemoteFrameBufferModel').tag(sync=True)
+    _model_name = Unicode("RemoteFrameBufferModel").tag(sync=True)
 
     # Name of the front-end module containing widget view
-    _view_module = Unicode('jupyter_rfb').tag(sync=True)
+    _view_module = Unicode("jupyter_rfb").tag(sync=True)
 
     # Name of the front-end module containing widget model
-    _model_module = Unicode('jupyter_rfb').tag(sync=True)
+    _model_module = Unicode("jupyter_rfb").tag(sync=True)
 
     # Version of the front-end module containing widget view
-    _view_module_version = Unicode('^0.1.0').tag(sync=True)
+    _view_module_version = Unicode("^0.1.0").tag(sync=True)
     # Version of the front-end module containing widget model
-    _model_module_version = Unicode('^0.1.0').tag(sync=True)
+    _model_module_version = Unicode("^0.1.0").tag(sync=True)
 
     # Widget specific properties
     last_index = Int(0).tag(sync=True)
@@ -97,4 +95,3 @@ class RemoteFrameBuffer(widgets.DOMWidget, FrameSenderMixin):
         #     if content['contents'] == 'removed':
         #         # Stop all timers associated to the widget.
         #         _stop_timers(self.canvas_backend._vispy_canvas)
-
