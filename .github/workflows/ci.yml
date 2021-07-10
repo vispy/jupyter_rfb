@@ -54,7 +54,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.pyversion }}
-
+      - name: Setup node
+          uses: actions/setup-node@v2
       - name: Install dependencies (lint and docs)
         if: matrix.dolint == 1
         shell: bash
@@ -66,8 +67,11 @@ jobs:
         shell: bash
         run: |
             python -m pip install --upgrade pip
+            pip install jupyter_packaging
             pip install -U ipywidgets numpy tornado
             pip install pytest
+            python setup.py install
+            rm -rf ./jupyter_rfb ./build ./egg-info
       - name: Lint
         if: matrix.dolint == 1
         shell: bash
