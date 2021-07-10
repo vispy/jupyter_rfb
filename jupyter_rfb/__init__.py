@@ -1,6 +1,5 @@
-from ._version import version_info, __version__
-
-from .widget import RemoteFrameBuffer
+from ._version import version_info, __version__  # noqa: F401
+from .widget import RemoteFrameBuffer  # noqa: F401
 
 
 def _jupyter_labextension_paths():

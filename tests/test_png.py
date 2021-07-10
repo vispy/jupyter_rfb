@@ -3,7 +3,6 @@ Test png module
 """
 
 import os
-import sys
 import tempfile
 
 from jupyter_rfb._png import array2png
@@ -102,7 +101,6 @@ def test_writing_failures():
 
     with raises(ValueError):
         array2png(im4.reshape(-1, -1, 8))
-        assert (im_check[:, :, i] == im).all()
 
 
 if __name__ == "__main__":

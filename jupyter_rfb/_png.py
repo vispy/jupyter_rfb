@@ -67,7 +67,6 @@ def array2png(array, file=None):
     # Chunk with pixels. Just one chunk, no fancy filters.
     compressor = zlib.compressobj(level=7)
     compressed_data = []
-    line_len = shape[1] * shape[2]
     for row_index in range(shape[0]):
         row = array[row_index]
         compressed_data.append(compressor.compress(b"\x00"))  # prepend filter byter
