@@ -72,7 +72,7 @@ jobs:
             pip install jupyter_packaging
             pip install -U ipywidgets numpy tornado
             pip install pytest
-            python setup.py install
+            pip install .
             rm -rf ./jupyter_rfb ./build ./egg-info
       - name: Lint
         if: matrix.dolint == 1
