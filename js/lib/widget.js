@@ -4,21 +4,6 @@ var _ = require('lodash');
 // See widget.py for the kernel counterpart to this file.
 
 
-// Custom Model. Custom widgets models must at least provide default values
-// for model attributes, including
-//
-//  - `_view_name`
-//  - `_view_module`
-//  - `_view_module_version`
-//
-//  - `_model_name`
-//  - `_model_module`
-//  - `_model_module_version`
-//
-//  when different from the base class.
-
-// When serialiazing the entire widget state for embedding, only values that
-// differ from the defaults will be specified.
 var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
     defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
         // Meta info
@@ -29,30 +14,114 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         _model_module_version : '0.1.0',
         _view_module_version : '0.1.0',
         // For the frames
-        last_index : 0,
-        last_timestamp : 0.0,
+        frame_feedback : {},
         // For the widget
         css_width : '100%',
         css_height : '300px',
         resizable : true
-    })
+    }),
+
+    initialize: function () {
+        RemoteFrameBufferModel.__super__.initialize.apply(this, arguments);        
+        window.rfb_model = this;  // Debug
+        // Keep a list if img elements, and auto-refresh it.
+        this.img_elements = [];
+        window.setInterval(this.resolve_img_elements.bind(this), 1000);
+         // Keep a list of frames to render
+        this.frames = [];
+        // We populate the above list from this callback
+        this.on('msg:custom', this.on_msg, this);                
+        // Initialize a stub frame
+        this.last_frame = {
+            src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mOor68HAAL+AX6E2KOJAAAAAElFTkSuQmCC",
+            index: 0,
+            timestamp: 0,
+        }
+        // Start the animation loop
+        this._img_update_pending = false;
+        this._request_animation_frame();        
+    },
+
+    resolve_img_elements: async function() {
+        // Here we collect img elements corresponding to the current views.
+        // We also set their onload methods which we use to schedule new draws.
+        // If we don't do this, there are a lot of "dropped frames" in FF, giving a jaggy feel.
+        // Reset
+        for (let img of this.img_elements) {
+            img.onload = null;
+        }
+        this.img_elements = [];
+        // Collect
+        for (let view_id in this.views) {
+            let view = await this.views[view_id];
+            this.img_elements.push(view.img);
+            view.img.onload = this._request_animation_frame.bind(this);
+        }
+        // Just in case we lose the animation loop somehow because of images dropping out.
+        this._request_animation_frame();
+    },
+
+    on_msg: function(msg, buffers) {
+        if (msg.type == "framebufferdata") {
+            this.frames.push(msg);
+        }        
+    },
+
+    _send_response: function() {
+        // Let Python know what we have at the model. This prop is a dict, making it "atomic".
+        let frame = this.last_frame;
+        let frame_feedback = {index: frame.index, timestamp: frame.timestamp, localtime: Date.now() / 1000};
+        this.set('frame_feedback', frame_feedback);
+        this.save_changes();
+    },
+
+    _request_animation_frame: function () {
+        // Request an animation frame, but with a tiny delay, just to avoid
+        // straining the browser. This seems to actually make things more smooth.
+        if (!this._img_update_pending) {
+            this._img_update_pending = true;
+            let func = this._animate.bind(this);
+            window.setTimeout(window.requestAnimationFrame, 5, func);
+        }
+    },
+
+    _animate: function() {
+        this._img_update_pending = false;
+        if (!this.frames.length) {
+            this._request_animation_frame();
+            return;
+        }
+        // Pick the oldest frame from the stack
+        let frame = this.frames.shift();
+        // Update the image sources
+        for (let img of this.img_elements) {
+            img.src = frame.src;
+        }
+        // Let the server know we processed the image (even if it's not shown yet)
+        this.last_frame = frame;
+        this._send_response();
+        // Request a new frame. If we have images, a frame is requested *after* they load.
+        if (this.img_elements.length == 0) {
+            this._request_animation_frame();
+        }
+    },
 });
 
 
-// Custom View. Renders the widget model.
 var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
     // Defines how the widget gets rendered into the DOM
     render: function() {
         var that = this;
 
         // Create image element
-        this.img = document.createElement("img");
-        this.img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mOor68HAAL+AX6E2KOJAAAAAElFTkSuQmCC";
+        this.img = new Image(1, 1);
+        this.img.decoding = "sync";
+        this.img.loading = "eager";
+        this.img.src = this.model.last_frame.src;
         this.el.appendChild(this.img);
         
-        // Receive custom messages (i.e. new image data)
-        this.model.on('msg:custom', this.on_msg, this);
-        
+        this.model.resolve_img_elements();
+
         // Set of throttler functions to send events at a friendly pace
         this._throttlers = {};
 
@@ -108,17 +177,6 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         this.img.addEventListener('touchmove', function (e) {
             that.send(create_pointer_event(that.img, e, "touch_move"));
         });
-    },
-
-    on_msg: function(msg, buffers) {
-        if (msg.type == "framebufferdata") {
-            // Update image (it's an in-line image)
-            this.img.src = msg.src;
-            // Let Python know what we have at the view
-            this.model.set('last_index', msg.index);
-            this.model.set('last_timestamp', msg.timestamp);
-            this.touch();
-        }
     },
 
     on_resizable: function () {
