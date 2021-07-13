@@ -11,6 +11,7 @@ class FrameSenderMixin:
     # This mixin needs from a subclass:
     # .frame_feedback
     # .max_buffered_frames
+    # .max_queued_frames
     # .send()
 
     def __init__(self, *args, **kwargs):
@@ -57,26 +58,30 @@ class FrameSenderMixin:
 
         """
         d = self._stats
-        fps = d["confirmed_frames"] / (d["last_confirmed_time"] - d["start_time"])
+        fps = d["confirmed_frames"] / (
+            d["last_confirmed_time"] - d["start_time"] + 0.00001
+        )
+        sent_frames_div = d["sent_frames"] or 1
+        roundtrip_count_div = d["roundtrip_count"] or 1
         return {
             "received_frames": d["received_frames"],
             "sent_frames": d["sent_frames"],
             "confirmed_frames": d["confirmed_frames"],
             "dropped_frames": d["dropped_frames"],
-            "roundtrip": d["roundtrip_sum"] / d["roundtrip_count"],
-            "delivery": d["delivery_sum"] / d["roundtrip_count"],
-            "img_encoding": d["img_encoding_sum"] / d["sent_frames"],
-            "b64_encoding": d["b64_encoding_sum"] / d["sent_frames"],
+            "roundtrip": d["roundtrip_sum"] / roundtrip_count_div,
+            "delivery": d["delivery_sum"] / roundtrip_count_div,
+            "img_encoding": d["img_encoding_sum"] / sent_frames_div,
+            "b64_encoding": d["b64_encoding_sum"] / sent_frames_div,
             "fps": fps,
         }
 
-    def push_frame(self, array):
+    def send_frame(self, array):
         """Schedule a frame to be send the browser. The frame may be
         send immediately, or queued to be send slightly later.
 
         When a frame is received by the client, it will confirm the
         receival. A total of ``max_buffered_frames`` can be "in-flight",
-        i.e. sent but not not yet confirmed. If ``push_frame()`` is
+        i.e. sent but not not yet confirmed. If ``send_frame()`` is
         called while the queue (frames waiting to be send) exceeds
         ``max_queued_frames``, the oldest frames will be dropped.
         """
@@ -96,9 +101,8 @@ class FrameSenderMixin:
         last_index = frame_feedback.get("index", 0)
         # Send frames if we can
         max_buffered = max(0, self.max_buffered_frames)
-        if self._pending_frames:
-            if last_index > self._frame_index - max_buffered:
-                self._send_frame(self._pending_frames.pop(0))
+        while self._pending_frames and last_index > self._frame_index - max_buffered:
+            self._send_frame(self._pending_frames.pop(0))
         # Update stats (note that we may not get an update for each and every drame
         if last_index > self._frame_index_roundtrip:
             self._frame_index_roundtrip = last_index
