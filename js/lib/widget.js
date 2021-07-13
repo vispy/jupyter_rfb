@@ -1,7 +1,22 @@
 var widgets = require('@jupyter-widgets/base');
 var _ = require('lodash');
 
-// See widget.py for the kernel counterpart to this file.
+/*
+ * See widget.py for the kernel counterpart to this file.
+ *
+ * The server sends frames to the client, and the client sends back
+ * a confirmation when it has processed the frame.
+ * 
+ * The client queues the frames it receives and processes them one-by-one
+ * at the browser's pace, using requestAnimationFrame. We send back a
+ * confirmation when the frame is processed (not when it is technically received).
+ * It is the responsibility of the server to not send too many frames beyond the
+ * last confirmed one.
+ * 
+ * When setting the img.src attribute, the browser still needs to actually render
+ * the image. We wait for this before requesting a new animation. If we don't do
+ * this on FF, the animation is not smooth because the image "gets stuck".
+ */
 
 
 var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
@@ -44,8 +59,7 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
 
     resolve_img_elements: async function() {
         // Here we collect img elements corresponding to the current views.
-        // We also set their onload methods which we use to schedule new draws.
-        // If we don't do this, there are a lot of "dropped frames" in FF, giving a jaggy feel.
+        // We also set their onload methods which we use to schedule new draws.        
         // Reset
         for (let img of this.img_elements) {
             img.onload = null;

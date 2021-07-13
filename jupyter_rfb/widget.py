@@ -1,3 +1,19 @@
+"""
+
+See widget.js for the client counterpart to this file.
+
+## Developer notes
+
+The server sends frames to the client, and the client sends back
+a confirmation when it has processed the frame.
+
+The server will not send more than `max_buffered_frames` beyond the
+last confirmed frame. As such, if the client processes frames slower,
+the server will slow down too. The server can also queue frames, at
+most max_queued_frames. The use case for this is probably limited to
+stress-tests. Both values should probably just be 1.
+"""
+
 import time
 from base64 import encodebytes
 
