@@ -22,9 +22,6 @@ from traitlets import Bool, Dict, Int, Unicode
 
 from ._png import array2png
 
-a = 3
-b = 4
-
 
 class FrameSenderMixin:
 
