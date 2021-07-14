@@ -21,6 +21,7 @@ import ipywidgets as widgets
 from traitlets import Unicode, Dict, Int, Bool
 from ._png import array2png
 
+a = 3
 
 class FrameSenderMixin:
 
