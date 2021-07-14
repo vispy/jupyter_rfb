@@ -54,6 +54,12 @@ You then need to refresh the JupyterLab page when your javascript changes.
 
 The code is autoformatted with `black .` and linted with `flake8 .`.
 
+Optionally, you can setup an autocommit hook to automatically run these on each commit:
+```
+$ pip install pre-commit
+$ pre-commit install
+```
+
 
 ## License
 
