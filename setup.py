@@ -1,17 +1,15 @@
-from __future__ import print_function
-from setuptools import setup, find_packages
 import os
-from os.path import join as pjoin
 from distutils import log
+from os.path import join as pjoin
 
 from jupyter_packaging import (
-    create_cmdclass,
-    install_npm,
-    ensure_targets,
     combine_commands,
+    create_cmdclass,
+    ensure_targets,
     get_version,
+    install_npm,
 )
-
+from setuptools import find_packages, setup
 
 here = os.path.dirname(os.path.abspath(__file__))
 

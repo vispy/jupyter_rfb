@@ -1,6 +1,8 @@
 import time
-from jupyter_rfb.widget import FrameSenderMixin
+
 import numpy as np
+
+from jupyter_rfb.widget import FrameSenderMixin
 
 
 class MyFrameSender(FrameSenderMixin):
