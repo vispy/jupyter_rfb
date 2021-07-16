@@ -190,19 +190,15 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.on_msg(self._receive_events)
+        self.on_msg(self._receive_msg)
         self.observe(self._iter, names=["frame_feedback"])
 
-    def _receive_events(self, widget, content, buffers):
-        pass
-        # print(content)
-        # if content['msg_type'] == 'init':
-        #     self.canvas_backend._reinit_widget()
-        # elif content['msg_type'] == 'events':
-        #     events = content['contents']
-        #     for ev in events:
-        #         self.gen_event(ev)
-        # elif content['msg_type'] == 'status':
-        #     if content['contents'] == 'removed':
-        #         # Stop all timers associated to the widget.
-        #         _stop_timers(self.canvas_backend._vispy_canvas)
+    def _receive_msg(self, widget, content, buffers):
+        if "event_type" in content:
+            self.receive_event(content)
+
+    def receive_event(self, event):
+        """ Method that is called on each event. Override this to process
+        incoming events.
+        """
+        event_type = event["event_type"]
