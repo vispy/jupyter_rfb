@@ -198,7 +198,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
             self.receive_event(content)
 
     def receive_event(self, event):
-        """ Method that is called on each event. Override this to process
+        """Method that is called on each event. Override this to process
         incoming events.
         """
-        event_type = event["event_type"]
+        pass
