@@ -1,6 +1,6 @@
 import io
-import zlib
 import struct
+import zlib
 
 import numpy as np
 

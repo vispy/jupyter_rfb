@@ -18,7 +18,8 @@ import time
 from base64 import encodebytes
 
 import ipywidgets as widgets
-from traitlets import Unicode, Dict, Int, Bool
+from traitlets import Bool, Dict, Int, Unicode
+
 from ._png import array2png
 
 
