@@ -112,8 +112,7 @@ class FrameSenderMixin:
         self._iter()
 
     def _iter(self, *args):
-        """ Perform one "iteration", see if we can send a frame.
-        """
+        """Perform one "iteration", see if we can send a frame."""
         # Called when trying to send a frame,
         # and every time that we receive new frame_feedback from the model
         frame_feedback = self.frame_feedback
@@ -196,8 +195,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         self.observe(self._iter, names=["frame_feedback"])
 
     def _receive_msg(self, widget, content, buffers):
-        """Receive custom messages and filter our events.
-        """
+        """Receive custom messages and filter our events."""
         if "event_type" in content:
             self.receive_event(content)
 
