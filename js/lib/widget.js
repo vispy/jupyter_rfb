@@ -239,7 +239,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             if (that.el.offsetParent === null) { return disable_key_event(); }
             let event = {
                 event_type: "key_" + e.type.slice(3),
-                key: KEYMAP[e.key] || e.key,          
+                key: KEYMAP[e.key] || e.key,
                 modifiers: get_modifiers(e),
             };
             if (!e.repeat) { that.send(event); }  // dont do the sticky key thing

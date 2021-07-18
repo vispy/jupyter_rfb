@@ -100,7 +100,7 @@ class FrameSenderMixin:
         receival. A total of ``max_buffered_frames`` can be "in-flight",
         i.e. sent but not not yet confirmed. If ``send_frame()`` is
         called while the queue (frames waiting to be send) exceeds
-        ``max_queued_frames``, the oldest frames will be dropped.
+        ``max_queued_frames``, the oldest frame will be dropped.
         """
         self._stats["received_frames"] += 1
         n_queued = len(self._pending_frames)
@@ -112,6 +112,8 @@ class FrameSenderMixin:
         self._iter()
 
     def _iter(self, *args):
+        """ Perform one "iteration", see if we can send a frame.
+        """
         # Called when trying to send a frame,
         # and every time that we receive new frame_feedback from the model
         frame_feedback = self.frame_feedback
@@ -194,11 +196,46 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         self.observe(self._iter, names=["frame_feedback"])
 
     def _receive_msg(self, widget, content, buffers):
+        """Receive custom messages and filter our events.
+        """
         if "event_type" in content:
             self.receive_event(content)
 
     def receive_event(self, event):
         """Method that is called on each event. Override this to process
-        incoming events.
+        incoming events. An event is a dict with at least the key `event_type`:
+
+        * `resize`: emitted when the widget changes size:
+            * `width`: in logical pixels.
+            * `height`: in logical pixels.
+            * `pixel_ratio`: the pixel ratio between logical and physical pixels.
+        * `pointer_down`: emitted when the user interacts with mouse, touch or
+          other pointer devices, by pressing it down:
+            * `x`: horizontal position of the pointer within the widget.
+            * `y`: vertical position of the pointer within the widget.
+            * `button`: the button to which this event applies.
+              With 0 no button, 1 left, 2 right, 3 middle, etc.
+            * `buttons`: a list of buttons being pressed down.
+            * `modifiers`: a list of modifier keys being pressed down,
+              e.g. "Shift" or "Control".
+            * `ntouches`: the number of simultaneous pointers being down.
+            * `touches`: a dict with int id's and dict values that have keys
+              "x", "y", "pressure".
+        * `pointer_up`: emitted when the user releases a pointer.
+          See `pointer_down` for details.
+        * `pointer_move`: emitted when the user moves a pointer.
+          See `pointer_down` for details.
+        * `double_click`: emitted on a double-click. Looks like a pointer event,
+          but without the touches.
+        * `wheel`: emitted when the mouse-wheel is used (scrolling):
+            * `dx`: the horizontal scroll delta.
+            * `dy`: the vertcal scroll delta.
+            * `x`: the mouse horizontal position during the scroll.
+            * `y`: the mouse vertical position during the scroll.
+            * `modifiers`: a list of modifier keys being pressed down.
+        * `keydown`: emitted when a key is pressed down:
+            * `key`: the (string) key being pressed, e.g. "a", "5", "%" or "Escape".
+            * `modifiers`: a list of modifier keys being pressed down.
+        * `keyup`: emitted when a key is released.
         """
         pass
