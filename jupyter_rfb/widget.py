@@ -103,11 +103,20 @@ class FrameSenderMixin:
         ``max_queued_frames``, the oldest frame will be dropped.
         """
         self._stats["received_frames"] += 1
+        # If there is no connection, don't bother sending frames
+        if getattr(self, "comm", True) is None:
+            self._stats["dropped_frames"] += len(self._pending_frames) + 1
+            self._pending_frames[:] = []
+            self._pending_frames.append(array)
+            return
+        # Do we need to drop some frames in our queue? If this happens the
+        # server produces images faster than the client can process them.
         n_queued = len(self._pending_frames)
         max_queued = max(1, self.max_queued_frames) - 1  # -1 because we'll add one
         if n_queued > max_queued:
             self._stats["dropped_frames"] += n_queued - max_queued
             self._pending_frames[max_queued:] = []
+        # Add to the queue and maybe process one item
         self._pending_frames.append(array)
         self._iter()
 
@@ -199,6 +208,12 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         if "event_type" in content:
             self.receive_event(content)
 
+    def close(self, *args, **kwargs):
+        # When the widget is closed, we notify by creating a close event. The
+        # same event is emitted from JS when the model is closed in the client.
+        super().close(*args, **kwargs)
+        self.receive_event({"event_type": "close"})
+
     def receive_event(self, event):
         """Method that is called on each event. Override this to process
         incoming events. An event is a dict with at least the key `event_type`:
@@ -235,5 +250,6 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
             * `key`: the (string) key being pressed, e.g. "a", "5", "%" or "Escape".
             * `modifiers`: a list of modifier keys being pressed down.
         * `keyup`: emitted when a key is released.
+        * `close`: emitted when the widget is closed (i.e. the conn is gone).
         """
         pass
