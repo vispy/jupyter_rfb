@@ -36,6 +36,7 @@ class FrameSenderMixin:
         self._frame_index = 0
         self._frame_index_roundtrip = 0
         self._pending_frames = []
+        self._closed = False
         self.reset_stats()
 
     def reset_stats(self):
@@ -104,7 +105,7 @@ class FrameSenderMixin:
         """
         self._stats["received_frames"] += 1
         # If there is no connection, don't bother sending frames
-        if getattr(self, "comm", True) is None:
+        if self._closed:
             self._stats["dropped_frames"] += len(self._pending_frames) + 1
             self._pending_frames[:] = []
             self._pending_frames.append(array)
@@ -206,13 +207,15 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
     def _receive_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
+            if content["event_type"] == "close":
+                self._closed = True
             self.receive_event(content)
 
     def close(self, *args, **kwargs):
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
         super().close(*args, **kwargs)
-        self.receive_event({"event_type": "close"})
+        self._receive_msg(self, {"event_type": "close"}, [])
 
     def receive_event(self, event):
         """Method that is called on each event. Override this to process
