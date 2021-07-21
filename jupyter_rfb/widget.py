@@ -142,7 +142,9 @@ class FrameSenderMixin:
 
 @widgets.register
 class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
-    """Widget that shows a remote frame buffer."""
+    """A widget that shows a remote frame buffer.
+    Subclass of [ipywidgets.DOMWidget](https://ipywidgets.readthedocs.io).
+    """
 
     # Name of the widget view class in front-end
     _view_name = Unicode("RemoteFrameBufferView").tag(sync=True)

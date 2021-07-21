@@ -4,6 +4,7 @@ dist/
 build/
 *.py[cod]
 node_modules/
+docs/site/
 
 # Compiled javascript
 jupyter_rfb/nbextension/

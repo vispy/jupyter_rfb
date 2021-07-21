@@ -1,1 +1,17 @@
-site_name: My Docs
+site_name: jupyter_rfb
+site_description: Remote Frame Buffer for Jupyter
+theme: readthedocs
+
+repo_name: vispy/jupyter_rfb
+repo_url: https://github.com/vispy/jupyter_rfb
+edit_uri: ""
+
+nav:
+    - Home: index.md
+    - Guide: guide.md
+    - Reference: ref.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - mkautodoc

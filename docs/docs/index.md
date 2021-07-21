@@ -1,17 +1,21 @@
-# Welcome to MkDocs
+# Welcome to the jupyter_rfb docs
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
 
-## Commands
+The `jupyter_rfb` library provides a widget (an `ipywidgets`s subclass)
+that can be used in the Jupyter notebook and in JupyterLab to realize
+a remote frame-buffer.
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+Images that are generated at the server are streamed to the client
+(Jupyter) where they are shown. Evens (such as mouse interactions) are
+streamed in the other direction, where the server can react by
+generating new images.
 
-## Project layout
+This "remote frame buffer" approach can be an effective method for
+certain visualizations to be dispayed in Jupyter notebook/lab. For
+example visualization created by tools like vispy, datoviz or pygfx.
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+## Contents
+
+* [Guide](guide/)
+* [Reference](ref/)
+
