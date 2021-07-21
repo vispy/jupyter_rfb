@@ -134,6 +134,16 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
     render: function () {
         var that = this;
 
+        // Create a stub element that can grab focus
+        this.focus_el = document.createElement("a");
+        this.focus_el.href = "#";
+        this.focus_el.style.position = "absolute";
+        this.focus_el.style.width = "1px";
+        this.focus_el.style.height = "1px";
+        this.focus_el.style.padding = "0";
+        this.focus_el.style.zIndex = "-99";
+        this.el.appendChild(this.focus_el);
+
         // Create image element
         this.img = new Image();
         // Tweak loading behavior. These should be the defaults, but we set them just in case.
@@ -179,6 +189,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             // This is what makes the JS PointerEvent so great. We can enable mouse capturing
             // and we will receive mouse-move and mouse-up even when the pointer moves outside
             // the element. Best of all, the capturing is disabled automatically!
+            that.focus_el.focus();
             that.img.setPointerCapture(e.pointerId);
             that._pointers[e.pointerId] = e;
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_down');
@@ -243,7 +254,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         // Key events - approach inspired from ipyevents
         function key_event_handler (e) {
             // Failsafe in case the element is deleted or detached.
-            if (that.el.offsetParent === null) { return disable_key_event(); }
+            if (that.el.offsetParent === null) { return; }
             let event = {
                 event_type: 'key_' + e.type.slice(3),
                 key: KEYMAP[e.key] || e.key,
@@ -253,16 +264,8 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             e.stopPropagation();
             e.preventDefault();
         }
-        function enable_key_event () {
-            document.addEventListener('keydown', key_event_handler, true);
-            document.addEventListener('keyup', key_event_handler, true);
-        }
-        function disable_key_event () {
-            document.removeEventListener('keydown', key_event_handler, true);
-            document.removeEventListener('keyup', key_event_handler, true);
-        }
-        this.el.addEventListener('pointerenter', enable_key_event, true);
-        this.el.addEventListener('pointerout', disable_key_event, true);
+        this.focus_el.addEventListener('keydown', key_event_handler, true);
+        this.focus_el.addEventListener('keyup', key_event_handler, true);
     },
 
     remove: function () {
