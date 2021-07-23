@@ -14,10 +14,12 @@ most max_queued_frames. The use case for this is probably limited to
 stress-tests. Both values should probably just be 1.
 """
 
+import asyncio
 import time
 from base64 import encodebytes
 
 import ipywidgets as widgets
+import numpy as np
 from traitlets import Bool, Dict, Int, Unicode
 
 from ._png import array2png
@@ -93,45 +95,9 @@ class FrameSenderMixin:
             "fps": fps,
         }
 
-    def send_frame(self, array):
-        """Schedule a frame to be send the browser. The frame may be
-        send immediately, or queued to be send slightly later.
-
-        When a frame is received by the client, it will confirm the
-        receival. A total of ``max_buffered_frames`` can be "in-flight",
-        i.e. sent but not not yet confirmed. If ``send_frame()`` is
-        called while the queue (frames waiting to be send) exceeds
-        ``max_queued_frames``, the oldest frame will be dropped.
-        """
-        self._stats["received_frames"] += 1
-        # If there is no connection, don't bother sending frames
-        if self._closed:
-            self._stats["dropped_frames"] += len(self._pending_frames) + 1
-            self._pending_frames[:] = []
-            self._pending_frames.append(array)
-            return
-        # Do we need to drop some frames in our queue? If this happens the
-        # server produces images faster than the client can process them.
-        n_queued = len(self._pending_frames)
-        max_queued = max(1, self.max_queued_frames) - 1  # -1 because we'll add one
-        if n_queued > max_queued:
-            self._stats["dropped_frames"] += n_queued - max_queued
-            self._pending_frames[max_queued:] = []
-        # Add to the queue and maybe process one item
-        self._pending_frames.append(array)
-        self._iter()
-
-    def _iter(self, *args):
-        """Perform one "iteration", see if we can send a frame."""
-        # Called when trying to send a frame,
-        # and every time that we receive new frame_feedback from the model
+    def _update_stats(self, frame_feedback):
         frame_feedback = self.frame_feedback
         last_index = frame_feedback.get("index", 0)
-        # Send frames if we can
-        max_buffered = max(0, self.max_buffered_frames)
-        while self._pending_frames and last_index > self._frame_index - max_buffered:
-            self._send_frame(self._pending_frames.pop(0))
-        # Update stats (note that we may not get an update for each and every drame
         if last_index > self._frame_index_roundtrip:
             self._frame_index_roundtrip = last_index
             self._stats["confirmed_frames"] = last_index - self._stats["start_index"]
@@ -141,6 +107,16 @@ class FrameSenderMixin:
                 frame_feedback["localtime"] - frame_feedback["timestamp"]
             )
             self._stats["last_confirmed_time"] = time.time()
+
+    def _maybe_draw(self):
+        frame_feedback = self.frame_feedback
+        last_index = frame_feedback.get("index", 0)
+        max_buffered = max(0, self.max_buffered_frames)
+        if self._rfb_draw_requested and last_index > self._frame_index - max_buffered:
+            self._rfb_draw_requested = False
+            array = self.get_frame({})
+            if array is not None:
+                self._send_frame(array)
 
     def _send_frame(self, array):
         """Actually send a frame over to the client."""
@@ -201,24 +177,58 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.on_msg(self._receive_msg)
-        self.observe(self._iter, names=["frame_feedback"])
+        self._rfb_draw_requested = False
+        self.on_msg(self._rfb_handle_msg)
+        self.observe(self._rfb_handle_frame_feedback, names=["frame_feedback"])
 
-    def _receive_msg(self, widget, content, buffers):
+    def _rfb_handle_frame_feedback(self, *args):
+        """When we have new frame feedback, we update the stats,
+        and we're probably able to perform a new draw.
+        """
+        self._update_stats()
+        self._rfb_schedule_maybe_draw()
+
+    def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
             if content["event_type"] == "close":
                 self._closed = True
-            self.receive_event(content)
+            elif content["event_type"] == "resize":
+                self.request_draw()
+            self.handle_event(content)
+
+    def _rfb_schedule_maybe_draw(self):
+        """Schedule _maybe_draw() to be called in a fresh event loop iteration."""
+        loop = asyncio.get_event_loop()
+        loop.call_soon(self._maybe_draw)
+        # or
+        # ioloop = tornado.ioloop.IOLoop.current()
+        # ioloop.add_callback(self._draw_frame_and_present)
+
+    def request_draw(self):
+        """Request a new draw. This schedule a new call to `on_draw()`
+        and sends the resulting array to the client.
+        """
+        # Technically, _maybe_draw() may not perform a draw if there are too
+        # many frames in-flight. But in this case, we'll eventually get
+        # new feedback, which will then trigger a draw.
+        if not self._rfb_draw_requested:
+            self._rfb_draw_requested = True
+            self._rfb_schedule_maybe_draw()
 
     def close(self, *args, **kwargs):
+        """Overloaded close method that emits a cose event."""
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
         super().close(*args, **kwargs)
-        self._receive_msg(self, {"event_type": "close"}, [])
+        self._rfb_handle_msg(self, {"event_type": "close"}, [])
 
-    def receive_event(self, event):
-        """Method that is called on each event. Override this to process
+    def get_frame(self, event):
+        """Produce the array to send to the client. Subclasses should overload this."""
+        return np.ones((1, 1), np.uint8) * 127
+
+    def handle_event(self, event):
+        """Method that is called on each event. Overload this to process
         incoming events. An event is a dict with at least the key `event_type`:
 
         * `resize`: emitted when the widget changes size:
