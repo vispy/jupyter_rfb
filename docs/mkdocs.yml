@@ -10,8 +10,13 @@ nav:
     - Home: index.md
     - Guide: guide.md
     - Reference: ref.md
+    - example: example.ipynb
 
 markdown_extensions:
   - admonition
   - codehilite
   - mkautodoc
+
+plugins:
+  - mkdocs-jupyter:
+      include_source: True

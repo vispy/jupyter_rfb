@@ -3,3 +3,4 @@ numpy
 ipywidgets
 mkdocs
 mkautodoc
+mkdocs-jupyter

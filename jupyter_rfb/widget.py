@@ -7,7 +7,7 @@ See widget.js for the client counterpart to this file.
 The server sends frames to the client, and the client sends back
 a confirmation when it has processed the frame.
 
-The server will not send more than `max_buffered_frames` beyond the
+The server will not send more than *max_buffered_frames* beyond the
 last confirmed frame. As such, if the client processes frames slower,
 the server will slow down too.
 """
@@ -24,6 +24,9 @@ from ._png import array2png
 
 
 class FrameSenderMixin:
+    """Mixin class that contains the logic for sending frames and keeping
+    track of stats. By making this a mixin, it is much easier to unit-test.
+    """
 
     # This mixin needs from a subclass:
     # .frame_feedback
@@ -38,7 +41,7 @@ class FrameSenderMixin:
         self.reset_stats()
 
     def reset_stats(self):
-        """Reset the stats (start measuring from this point in time)."""
+        """Reset the stats (start measuring from here)."""
         self._rfb_stats = {
             "start_time": 0,
             "last_time": 1,
@@ -53,20 +56,20 @@ class FrameSenderMixin:
 
     @property
     def stats(self):
-        """Get the current stats since the last time ``reset_stats()``
+        """The current stats since the last time `reset_stats()`
         was called. Stats is a dict with the following fields:
 
-        * sent_frames: the number of frames actually sent.
-        * confirmed_frames: number of frames confirmed to be reveived at the client.
-        * roundtrip: avererage time for processing one frame, including receiver confirmation.
-        * delivery: average time for processing one frame until receival by the client.
+        * *sent_frames*: the number of frames sent.
+        * *confirmed_frames*: number of frames confirmed to be reveived by the client.
+        * *roundtrip*: avererage time for processing a frame, including receiver confirmation.
+        * *delivery*: average time for processing a frame until it's received by the client.
           This measure assumes that the clock of the server and client are precisely synced.
-        * img_encoding: the average time spent on encoding the array into an image (PNG).
-        * b64_encoding: the average time spent on base64 encoding the data.
-        * fps: the average FPS, measures by deviding the number of confirmed
+        * *img_encoding*: the average time spent on encoding the array into an image (PNG).
+        * *b64_encoding*: the average time spent on base64 encoding the data.
+        * *fps*: the average FPS, measured by deviding the number of confirmed
           frames by the run-time, where run-time is the time from when the first
-          frame was sent (since ``reset_stats()`` was called), until the time of
-          the last confirmed frame.
+          frame was sent (since `reset_stats()` was called), until the last
+          frame was confirmed.
         """
         d = self._rfb_stats
         roundtrip_count_div = d["roundtrip_count"] or 1
@@ -144,6 +147,18 @@ class FrameSenderMixin:
 class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
     """A widget that shows a remote frame buffer.
     Subclass of [ipywidgets.DOMWidget](https://ipywidgets.readthedocs.io).
+
+    This widget has the following traits:
+
+    * *css_width*: the logical width of the frame expressed in css. Default '100%'.
+    * *css_height*: the logical height of the frame expressed in css. Default '300xp'.
+    * *resizable*: whether the frame can be manually resized. Default True.
+    * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
+      i.e. sent, but not yet confirmed by the client. Default 2. Too high values
+      may strain the io and introduce lag.
+
+    To use this class, it should be subclassed, and its `get_frame()`
+    and `handle_event()` methods should be implemented.
     """
 
     # Name of the widget view class in front-end
@@ -163,10 +178,9 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
     # Version of the front-end module containing widget model
     _model_module_version = Unicode("^0.1.0").tag(sync=True)
 
-    # Widget specific properties
+    # Widget specific traits
     frame_feedback = Dict({}).tag(sync=True)
     max_buffered_frames = Int(2, min=1)
-
     css_width = Unicode("100%").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
@@ -193,12 +207,14 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         # ioloop.add_callback(self._rfb_maybe_draw)
 
     def request_draw(self):
-        """Request a new draw. This schedule a new call to `on_draw()`
-        and sends the resulting array to the client.
+        """Schedule a new draw when the widget is ready for it. During
+        a draw, the `get_frame()` method is called, and the resulting
+        array is sent to the client. This method is automatically called
+        on each resize event.
         """
         # Technically, _maybe_draw() may not perform a draw if there are too
         # many frames in-flight. But in this case, we'll eventually get
-        # new feedback, which will then trigger a draw.
+        # new frame_feedback, which will then trigger a draw.
         if not self._rfb_draw_requested:
             self._rfb_draw_requested = True
             self._rfb_schedule_maybe_draw()
@@ -211,45 +227,51 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         self._rfb_handle_msg(self, {"event_type": "close"}, [])
 
     def get_frame(self):
-        """Produce the array to send to the client. Subclasses should overload this."""
+        """The method that is called during a draw to obtain a new
+        frame. Subclasses should overload this. May return None to
+        cancel the draw.
+        """
         return np.ones((1, 1), np.uint8) * 127
 
     def handle_event(self, event):
-        """Method that is called on each event. Overload this to process
-        incoming events. An event is a dict with at least the key `event_type`:
+        """The method that is called on each event. Overload this to process
+        incoming events. An event is a dict with at least the key *event_type*:
 
-        * `resize`: emitted when the widget changes size:
-            * `width`: in logical pixels.
-            * `height`: in logical pixels.
-            * `pixel_ratio`: the pixel ratio between logical and physical pixels.
-        * `pointer_down`: emitted when the user interacts with mouse, touch or
+        * **resize**: emitted when the widget changes size:
+            * *width*: in logical pixels.
+            * *height*: in logical pixels.
+            * *pixel_ratio*: the pixel ratio between logical and physical pixels.
+        * **close**: emitted when the widget is closed (i.e. destroyed).
+          This event has no additional keys.
+        * **pointer_down**: emitted when the user interacts with mouse, touch or
           other pointer devices, by pressing it down:
-            * `x`: horizontal position of the pointer within the widget.
-            * `y`: vertical position of the pointer within the widget.
-            * `button`: the button to which this event applies.
+            * *x*: horizontal position of the pointer within the widget.
+            * *y*: vertical position of the pointer within the widget.
+            * *button*: the button to which this event applies.
               With 0 no button, 1 left, 2 right, 3 middle, etc.
-            * `buttons`: a list of buttons being pressed down.
-            * `modifiers`: a list of modifier keys being pressed down,
+            * *buttons*: a list of buttons being pressed down.
+            * *modifiers*: a list of modifier keys being pressed down,
               e.g. "Shift" or "Control".
-            * `ntouches`: the number of simultaneous pointers being down.
-            * `touches`: a dict with int id's and dict values that have keys
+            * *ntouches*: the number of simultaneous pointers being down.
+            * *touches*: a dict with int id's and dict values that have keys
               "x", "y", "pressure".
-        * `pointer_up`: emitted when the user releases a pointer.
-          See `pointer_down` for details.
-        * `pointer_move`: emitted when the user moves a pointer.
-          See `pointer_down` for details.
-        * `double_click`: emitted on a double-click. Looks like a pointer event,
-          but without the touches.
-        * `wheel`: emitted when the mouse-wheel is used (scrolling):
-            * `dx`: the horizontal scroll delta.
-            * `dy`: the vertcal scroll delta.
-            * `x`: the mouse horizontal position during the scroll.
-            * `y`: the mouse vertical position during the scroll.
-            * `modifiers`: a list of modifier keys being pressed down.
-        * `keydown`: emitted when a key is pressed down:
-            * `key`: the (string) key being pressed, e.g. "a", "5", "%" or "Escape".
-            * `modifiers`: a list of modifier keys being pressed down.
-        * `keyup`: emitted when a key is released.
-        * `close`: emitted when the widget is closed (i.e. the conn is gone).
+        * **pointer_up**: emitted when the user releases a pointer.
+          This event has the same keys as the pointer down event.
+        * **pointer_move**: emitted when the user moves a pointer.
+          This event has the same keys as the pointer down event.
+        * **double_click**: emitted on a double-click.
+          This event looks like a pointer event, but without the touches.
+        * **wheel**: emitted when the mouse-wheel is used (scrolling):
+            * *dx*: the horizontal scroll delta.
+            * *dy*: the vertcal scroll delta.
+            * *x*: the mouse horizontal position during the scroll.
+            * *y*: the mouse vertical position during the scroll.
+            * *modifiers*: a list of modifier keys being pressed down.
+        * **key_down**: emitted when a key is pressed down:
+            * *key*: the (string) key being pressed, e.g. "a", "5", "%" or "Escape".
+            * *modifiers*: a list of modifier keys being pressed down.
+        * **key_up**: emitted when a key is released.
+          This event has the same keys as the key down event.
+
         """
         pass

@@ -4,18 +4,26 @@ Remote Frame Buffer for Jupyter
 
 ## Introduction
 
-The `jupyter_rfb` library provides an widget (an ipywidgets subclass)
+The `jupyter_rfb` library provides a widget (an `ipywidgets` subclass)
 that can be used in the Jupyter notebook and in JupyterLab to realize
 a remote frame-buffer.
 
+
+## Remote frame buffer
+
 Images that are generated at the server are streamed to the client
 (Jupyter) where they are shown. Evens (such as mouse interactions) are
-streamed in the other direction, where the server can react by generating
-new images.
+streamed in the other direction, where the server can react by
+generating new images.
 
-This "remote frame buffer" approach can be an effective method for certain
-visualizations to be dispayed in Jupyter notebook/lab. For example
-visualization created by tools like vispy, datoviz or pygfx.
+This "remote frame buffer" approach can be an effective method for
+server-generated visualizations to be dispayed in Jupyter notebook/lab. For
+example visualization created by tools like vispy, datoviz or pygfx.
+
+## Scope
+
+The above defines the full scope of this library. This makes it easier
+to focus on efficiency, e.g. throttling, image compression, partial updates, etc.
 
 
 ## Installation
@@ -25,7 +33,7 @@ To install use pip:
     $ pip install jupyter_rfb
 
 On older versions of Jupyter notebook/lab an extra step might be needed
-to enable the widget. TODO
+to enable the widget.
 
 
 ## Development installation

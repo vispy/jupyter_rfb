@@ -1,5 +1,5 @@
-# jupyter_rfb reference
+# The jupyter_rfb reference
 
 ::: jupyter_rfb.RemoteFrameBuffer
     :docstring:
-    :members: receive_event send_frame stats reset_stats
+    :members: request_draw get_frame handle_event reset_stats stats
