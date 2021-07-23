@@ -9,9 +9,7 @@ a confirmation when it has processed the frame.
 
 The server will not send more than `max_buffered_frames` beyond the
 last confirmed frame. As such, if the client processes frames slower,
-the server will slow down too. The server can also queue frames, at
-most max_queued_frames. The use case for this is probably limited to
-stress-tests. Both values should probably just be 1.
+the server will slow down too.
 """
 
 import asyncio
@@ -30,27 +28,22 @@ class FrameSenderMixin:
     # This mixin needs from a subclass:
     # .frame_feedback
     # .max_buffered_frames
-    # .max_queued_frames
+    # .get_frame()
     # .send()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._frame_index = 0
-        self._frame_index_roundtrip = 0
-        self._pending_frames = []
-        self._closed = False
+        self._rfb_frame_index = 0
+        self._rfb_last_confirmed_index = 0
         self.reset_stats()
 
     def reset_stats(self):
         """Reset the stats (start measuring from this point in time)."""
-        self._stats = {
-            "start_index": self._frame_index,
-            "start_time": time.time(),
-            "last_confirmed_time": 0,
-            "received_frames": 0,
+        self._rfb_stats = {
+            "start_time": 0,
+            "last_time": 1,
             "sent_frames": 0,
             "confirmed_frames": 0,
-            "dropped_frames": 0,
             "roundtrip_count": 0,
             "roundtrip_sum": 0,
             "delivery_sum": 0,
@@ -63,9 +56,7 @@ class FrameSenderMixin:
         """Get the current stats since the last time ``reset_stats()``
         was called. Stats is a dict with the following fields:
 
-        * received_frames: the number of frames reveived for sending.
-        * sent_frames: the number of frames actually sent. Some frames may have
-          been dropped, or simply not sent yet.
+        * sent_frames: the number of frames actually sent.
         * confirmed_frames: number of frames confirmed to be reveived at the client.
         * roundtrip: avererage time for processing one frame, including receiver confirmation.
         * delivery: average time for processing one frame until receival by the client.
@@ -73,21 +64,17 @@ class FrameSenderMixin:
         * img_encoding: the average time spent on encoding the array into an image (PNG).
         * b64_encoding: the average time spent on base64 encoding the data.
         * fps: the average FPS, measures by deviding the number of confirmed
-          frames by the run-time, where run-time is the time from the moment
-          ``reset_stats()`` is called, until the last frame confirmation.
-
+          frames by the run-time, where run-time is the time from when the first
+          frame was sent (since ``reset_stats()`` was called), until the time of
+          the last confirmed frame.
         """
-        d = self._stats
-        fps = d["confirmed_frames"] / (
-            d["last_confirmed_time"] - d["start_time"] + 0.00001
-        )
+        d = self._rfb_stats
+        fps = d["confirmed_frames"] / (d["last_time"] - d["start_time"])
         sent_frames_div = d["sent_frames"] or 1
         roundtrip_count_div = d["roundtrip_count"] or 1
         return {
-            "received_frames": d["received_frames"],
             "sent_frames": d["sent_frames"],
             "confirmed_frames": d["confirmed_frames"],
-            "dropped_frames": d["dropped_frames"],
             "roundtrip": d["roundtrip_sum"] / roundtrip_count_div,
             "delivery": d["delivery_sum"] / roundtrip_count_div,
             "img_encoding": d["img_encoding_sum"] / sent_frames_div,
@@ -95,33 +82,39 @@ class FrameSenderMixin:
             "fps": fps,
         }
 
-    def _update_stats(self, frame_feedback):
-        frame_feedback = self.frame_feedback
-        last_index = frame_feedback.get("index", 0)
-        if last_index > self._frame_index_roundtrip:
-            self._frame_index_roundtrip = last_index
-            self._stats["confirmed_frames"] = last_index - self._stats["start_index"]
-            self._stats["roundtrip_count"] += 1
-            self._stats["roundtrip_sum"] += time.time() - frame_feedback["timestamp"]
-            self._stats["delivery_sum"] += (
-                frame_feedback["localtime"] - frame_feedback["timestamp"]
-            )
-            self._stats["last_confirmed_time"] = time.time()
+    def _rfb_update_stats(self):
+        """Update the stats when a new frame feedback has arrived."""
+        feedback = self.frame_feedback
+        last_index = feedback.get("index", 0)
+        timestamp = feedback["timestamp"]
+        if last_index > self._rfb_last_confirmed_index:
+            nframes = last_index - self._rfb_last_confirmed_index
+            self._rfb_last_confirmed_index = last_index
+            self._rfb_stats["confirmed_frames"] += nframes
+            self._rfb_stats["roundtrip_count"] += 1
+            self._rfb_stats["roundtrip_sum"] += time.time() - timestamp
+            self._rfb_stats["delivery_sum"] += feedback["localtime"] - timestamp
+            self._rfb_stats["last_time"] = time.time()
+            if not self._rfb_stats["start_time"]:
+                self._rfb_stats["start_time"] = timestamp
 
-    def _maybe_draw(self):
+    def _rfb_maybe_draw(self):
+        """Perform a draw, if we can and should."""
         frame_feedback = self.frame_feedback
         last_index = frame_feedback.get("index", 0)
         max_buffered = max(0, self.max_buffered_frames)
-        if self._rfb_draw_requested and last_index > self._frame_index - max_buffered:
+        if (
+            self._rfb_draw_requested
+            and last_index > self._rfb_frame_index - max_buffered
+        ):
             self._rfb_draw_requested = False
-            array = self.get_frame({})
+            array = self.get_frame()
             if array is not None:
-                self._send_frame(array)
+                self._rfb_send_frame(array)
 
-    def _send_frame(self, array):
+    def _rfb_send_frame(self, array):
         """Actually send a frame over to the client."""
-        self._frame_index += 1
-        self._stats["sent_frames"] += 1
+        self._rfb_frame_index += 1
         timestamp = time.time()
 
         # Turn array into a based64-encoded PNG
@@ -132,14 +125,16 @@ class FrameSenderMixin:
         src = preamble + encodebytes(png_data).decode()
         t3 = time.perf_counter()
 
-        self._stats["img_encoding_sum"] += t2 - t1
-        self._stats["b64_encoding_sum"] += t3 - t2
+        # Stats
+        self._rfb_stats["img_encoding_sum"] += t2 - t1
+        self._rfb_stats["b64_encoding_sum"] += t3 - t2
+        self._rfb_stats["sent_frames"] += 1
 
         # Compose message and send
         msg = dict(
             type="framebufferdata",
             src=src,
-            index=self._frame_index,
+            index=self._rfb_frame_index,
             timestamp=timestamp,
         )
         self.send(msg)
@@ -169,7 +164,6 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
     # Widget specific properties
     frame_feedback = Dict({}).tag(sync=True)
     max_buffered_frames = Int(1, min=1)
-    max_queued_frames = Int(1, min=1)
 
     css_width = Unicode("100%").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
@@ -185,25 +179,23 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         """When we have new frame feedback, we update the stats,
         and we're probably able to perform a new draw.
         """
-        self._update_stats()
+        self._rfb_update_stats()
         self._rfb_schedule_maybe_draw()
 
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
-            if content["event_type"] == "close":
-                self._closed = True
-            elif content["event_type"] == "resize":
+            if content["event_type"] == "resize":
                 self.request_draw()
             self.handle_event(content)
 
     def _rfb_schedule_maybe_draw(self):
         """Schedule _maybe_draw() to be called in a fresh event loop iteration."""
         loop = asyncio.get_event_loop()
-        loop.call_soon(self._maybe_draw)
+        loop.call_soon(self._rfb_maybe_draw)
         # or
         # ioloop = tornado.ioloop.IOLoop.current()
-        # ioloop.add_callback(self._draw_frame_and_present)
+        # ioloop.add_callback(self._rfb_maybe_draw)
 
     def request_draw(self):
         """Request a new draw. This schedule a new call to `on_draw()`
@@ -223,7 +215,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         super().close(*args, **kwargs)
         self._rfb_handle_msg(self, {"event_type": "close"}, [])
 
-    def get_frame(self, event):
+    def get_frame(self):
         """Produce the array to send to the client. Subclasses should overload this."""
         return np.ones((1, 1), np.uint8) * 127
 
