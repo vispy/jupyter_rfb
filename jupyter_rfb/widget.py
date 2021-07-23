@@ -69,9 +69,9 @@ class FrameSenderMixin:
           the last confirmed frame.
         """
         d = self._rfb_stats
-        fps = d["confirmed_frames"] / (d["last_time"] - d["start_time"])
-        sent_frames_div = d["sent_frames"] or 1
         roundtrip_count_div = d["roundtrip_count"] or 1
+        sent_frames_div = d["sent_frames"] or 1
+        fps_div = (d["last_time"] - d["start_time"]) or 0.001
         return {
             "sent_frames": d["sent_frames"],
             "confirmed_frames": d["confirmed_frames"],
@@ -79,15 +79,14 @@ class FrameSenderMixin:
             "delivery": d["delivery_sum"] / roundtrip_count_div,
             "img_encoding": d["img_encoding_sum"] / sent_frames_div,
             "b64_encoding": d["b64_encoding_sum"] / sent_frames_div,
-            "fps": fps,
+            "fps": d["confirmed_frames"] / fps_div,
         }
 
-    def _rfb_update_stats(self):
+    def _rfb_update_stats(self, feedback):
         """Update the stats when a new frame feedback has arrived."""
-        feedback = self.frame_feedback
         last_index = feedback.get("index", 0)
-        timestamp = feedback["timestamp"]
         if last_index > self._rfb_last_confirmed_index:
+            timestamp = feedback["timestamp"]
             nframes = last_index - self._rfb_last_confirmed_index
             self._rfb_last_confirmed_index = last_index
             self._rfb_stats["confirmed_frames"] += nframes
@@ -100,8 +99,9 @@ class FrameSenderMixin:
 
     def _rfb_maybe_draw(self):
         """Perform a draw, if we can and should."""
-        frame_feedback = self.frame_feedback
-        last_index = frame_feedback.get("index", 0)
+        feedback = self.frame_feedback
+        self._rfb_update_stats(feedback)
+        last_index = feedback.get("index", 0)
         max_buffered = max(0, self.max_buffered_frames)
         if (
             self._rfb_draw_requested
@@ -173,14 +173,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
         super().__init__(*args, **kwargs)
         self._rfb_draw_requested = False
         self.on_msg(self._rfb_handle_msg)
-        self.observe(self._rfb_handle_frame_feedback, names=["frame_feedback"])
-
-    def _rfb_handle_frame_feedback(self, *args):
-        """When we have new frame feedback, we update the stats,
-        and we're probably able to perform a new draw.
-        """
-        self._rfb_update_stats()
-        self._rfb_schedule_maybe_draw()
+        self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
 
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
@@ -189,7 +182,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
                 self.request_draw()
             self.handle_event(content)
 
-    def _rfb_schedule_maybe_draw(self):
+    def _rfb_schedule_maybe_draw(self, *args):
         """Schedule _maybe_draw() to be called in a fresh event loop iteration."""
         loop = asyncio.get_event_loop()
         loop.call_soon(self._rfb_maybe_draw)
