@@ -163,7 +163,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
 
     # Widget specific properties
     frame_feedback = Dict({}).tag(sync=True)
-    max_buffered_frames = Int(1, min=1)
+    max_buffered_frames = Int(2, min=1)
 
     css_width = Unicode("100%").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
