@@ -11,4 +11,4 @@ dependencies:
    - numpy
    - notebook>=5.3
    - vispy
-   - wgpu-py
+   - wgpu
