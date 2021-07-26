@@ -12,4 +12,5 @@ dependencies:
    - numpy
    - notebook>=5.3
    - vispy
+   - glfw
    - wgpu
