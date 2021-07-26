@@ -16,7 +16,7 @@ import asyncio
 import time
 from base64 import encodebytes
 
-import ipywidgets as widgets
+import ipywidgets
 import numpy as np
 from traitlets import Bool, Dict, Int, Unicode
 
@@ -56,7 +56,7 @@ class FrameSenderMixin:
 
     @property
     def stats(self):
-        """The current stats since the last time `reset_stats()`
+        """The current stats since the last time ``reset_stats()``
         was called. Stats is a dict with the following fields:
 
         * *sent_frames*: the number of frames sent.
@@ -68,7 +68,7 @@ class FrameSenderMixin:
         * *b64_encoding*: the average time spent on base64 encoding the data.
         * *fps*: the average FPS, measured by deviding the number of confirmed
           frames by the run-time, where run-time is the time from when the first
-          frame was sent (since `reset_stats()` was called), until the last
+          frame was sent (since ``reset_stats()`` was called), until the last
           frame was confirmed.
         """
         d = self._rfb_stats
@@ -143,10 +143,10 @@ class FrameSenderMixin:
         self.send(msg)
 
 
-@widgets.register
-class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
+@ipywidgets.register
+class RemoteFrameBuffer(FrameSenderMixin, ipywidgets.DOMWidget):
     """A widget that shows a remote frame buffer.
-    Subclass of [ipywidgets.DOMWidget](https://ipywidgets.readthedocs.io).
+    Subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
 
     This widget has the following traits:
 
@@ -157,8 +157,8 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
       i.e. sent, but not yet confirmed by the client. Default 2. Too high values
       may strain the io and introduce lag.
 
-    To use this class, it should be subclassed, and its `get_frame()`
-    and `handle_event()` methods should be implemented.
+    To use this class, it should be subclassed, and its ``get_frame()``
+    and ``handle_event()`` methods should be implemented.
     """
 
     # Name of the widget view class in front-end
@@ -208,7 +208,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
 
     def request_draw(self):
         """Schedule a new draw when the widget is ready for it. During
-        a draw, the `get_frame()` method is called, and the resulting
+        a draw, the ``get_frame()`` method is called, and the resulting
         array is sent to the client. This method is automatically called
         on each resize event.
         """
@@ -220,7 +220,6 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
             self._rfb_schedule_maybe_draw()
 
     def close(self, *args, **kwargs):
-        """Overloaded close method that emits a cose event."""
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
         super().close(*args, **kwargs)
@@ -228,7 +227,7 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
 
     def get_frame(self):
         """The method that is called during a draw to obtain a new
-        frame. Subclasses should overload this. May return None to
+        frame. Subclasses should overload this. May return ``None`` to
         cancel the draw.
         """
         return np.ones((1, 1), np.uint8) * 127
@@ -243,8 +242,8 @@ class RemoteFrameBuffer(FrameSenderMixin, widgets.DOMWidget):
             * *pixel_ratio*: the pixel ratio between logical and physical pixels.
         * **close**: emitted when the widget is closed (i.e. destroyed).
           This event has no additional keys.
-        * **pointer_down**: emitted when the user interacts with mouse, touch or
-          other pointer devices, by pressing it down:
+        * **pointer_down**: emitted when the user interacts with mouse,
+          touch or other pointer devices, by pressing it down:
             * *x*: horizontal position of the pointer within the widget.
             * *y*: vertical position of the pointer within the widget.
             * *button*: the button to which this event applies.
