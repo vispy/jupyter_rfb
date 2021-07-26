@@ -1,6 +1,0 @@
-jupyter_packaging
-numpy
-ipywidgets
-mkdocs
-mkautodoc
-mkdocs-jupyter

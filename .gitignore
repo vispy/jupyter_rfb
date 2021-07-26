@@ -5,6 +5,7 @@ build/
 *.py[cod]
 node_modules/
 docs/site/
+docs/examples/*.ipynb
 
 # Compiled javascript
 jupyter_rfb/nbextension/
