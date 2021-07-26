@@ -102,7 +102,7 @@ nbsphinx_prolog = """
         </a>
 
         <a class='jrfb'
-            href='{{ env.docname }}.ipynb'
+            href='{{ env.docname.split("/")[-1] }}.ipynb'
             >
         <img width=16 src='../_static/download-solid.svg' />
         Download
