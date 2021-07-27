@@ -6,7 +6,7 @@ RemoteFrameBuffer class
 -----------------------
 
 .. autoclass:: jupyter_rfb.RemoteFrameBuffer
-    :members: request_draw, get_frame, handle_event, reset_stats, stats
+    :members: request_draw, get_frame, handle_event, reset_stats, get_stats
     :member-order: bysource
 
 

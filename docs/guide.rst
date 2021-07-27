@@ -83,14 +83,14 @@ throttling applies to the resize, scroll, and pointer_move events.
 Measuring statistics
 --------------------
 
-The ``RemoteFrameBuffer`` class has a property ``stats`` that returns a dict
-with performance metrics:
+The ``RemoteFrameBuffer`` class has a method ``get_stats()`` that
+returns a dict with performance metrics:
 
 .. code-block::
 
     >>> w.reset_stats()  # start measuring
         ... interact or run a test
-    >>> w.stats
+    >>> w.get_stats()
     {
         ...
     }
