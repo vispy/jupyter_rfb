@@ -1,3 +1,4 @@
+from . import events  # noqa: F401
 from ._version import __version__, version_info  # noqa: F401
 from .widget import RemoteFrameBuffer  # noqa: F401
 

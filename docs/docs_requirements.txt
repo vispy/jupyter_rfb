@@ -1,0 +1,5 @@
+jupyter_packaging
+numpy
+ipywidgets
+sphinx
+nbsphinx
