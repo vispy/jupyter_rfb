@@ -84,6 +84,7 @@ nbsphinx_prolog = """
         border-radius: 5px;
         border: 1px solid #aaa;
         background: #eee;
+        font-size: 85%;
     }
     a.jrfb, a.jrfb:active, a.jrfb:hover {
         text-decoration: none;
@@ -106,6 +107,12 @@ nbsphinx_prolog = """
             >
         <img width=16 src='../_static/download-solid.svg' />
         Download
+        </a>
+
+        <a class=''
+            href='https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?filepath={{ env.docname }}.ipynb'
+            >
+        <img src='https://mybinder.org/badge_logo.svg' />
         </a>
 
     </div>

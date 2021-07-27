@@ -1,0 +1,18 @@
+name: jupyter_rfb
+channels:
+ - conda-forge
+dependencies:
+ - nodejs
+ - yarn
+ - pip:
+   - traittypes
+   - traitlets
+   - ipywidgets>=7.4
+   - notebook>=5.3
+   - numpy
+   - Pillow
+   - imageio
+   - imageio-ffmpeg
+   - vispy
+   - glfw
+   - wgpu
