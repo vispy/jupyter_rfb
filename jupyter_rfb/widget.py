@@ -41,7 +41,10 @@ class FrameSenderMixin:
         self.reset_stats()
 
     def reset_stats(self):
-        """Reset the stats (start measuring from here)."""
+        """Reset the stats (start measuring from this point in time).
+        Note that the FPS measurement starts on the first frame drawn
+        after this call.
+        """
         self._rfb_stats = {
             "start_time": 0,
             "last_time": 1,
@@ -54,9 +57,8 @@ class FrameSenderMixin:
             "b64_encoding_sum": 0,
         }
 
-    @property
-    def stats(self):
-        """The current stats since the last time ``reset_stats()``
+    def get_stats(self):
+        """Get the current stats since the last time ``reset_stats()``
         was called. Stats is a dict with the following fields:
 
         * *sent_frames*: the number of frames sent.
@@ -64,7 +66,7 @@ class FrameSenderMixin:
         * *roundtrip*: avererage time for processing a frame, including receiver confirmation.
         * *delivery*: average time for processing a frame until it's received by the client.
           This measure assumes that the clock of the server and client are precisely synced.
-        * *img_encoding*: the average time spent on encoding the array into an image (PNG).
+        * *img_encoding*: the average time spent on encoding the array into an image.
         * *b64_encoding*: the average time spent on base64 encoding the data.
         * *fps*: the average FPS, measured by deviding the number of confirmed
           frames by the run-time, where run-time is the time from when the first
@@ -150,12 +152,12 @@ class RemoteFrameBuffer(FrameSenderMixin, ipywidgets.DOMWidget):
 
     This widget has the following traits:
 
-    * *css_width*: the logical width of the frame expressed in css. Default '100%'.
-    * *css_height*: the logical height of the frame expressed in css. Default '300xp'.
+    * *css_width*: the logical width of the frame as a CSS string. Default '100%'.
+    * *css_height*: the logical height of the frame as a CSS string. Default '300xp'.
     * *resizable*: whether the frame can be manually resized. Default True.
     * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
-      i.e. sent, but not yet confirmed by the client. Default 2. Too high values
-      may strain the io and introduce lag.
+      i.e. sent, but not yet confirmed by the client. Default 2. Higher values
+      may result in a higher FPS at the cost of introducing lag.
 
     To use this class, it should be subclassed, and its ``get_frame()``
     and ``handle_event()`` methods should be implemented.
