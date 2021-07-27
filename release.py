@@ -17,6 +17,7 @@ This script will then:
 
 import os
 import sys
+import shutil
 import importlib
 import subprocess
 
