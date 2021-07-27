@@ -1,3 +1,20 @@
+"""Release script for jupyter_rfb
+
+Usage:
+
+    python release.py 1.2.3
+
+This script will then:
+
+    * Update _version.py with the specified version.
+    * Show a diff and ask for confirmation.
+    * Commit the change, and tag that commit.
+    * Git push main and the new tag.
+    * Ask for confirmation to push to Pypi.
+    * Create an sdist and bdist_wheel build.
+    * Push these to Pypi.
+"""
+
 import os
 import sys
 import importlib
@@ -39,7 +56,7 @@ def release(version):
         subprocess.check_output(["git", "status", "--porcelain"]).decode().splitlines()
     )
     lines = [line for line in lines if not line.startswith("?? ")]
-    if lines:
+    if lines and version:
         print("Cannot bump version because there are outstanding changes:")
         print("\n".join(lines))
         return
@@ -54,9 +71,7 @@ def release(version):
         raise ValueError("Could not find version definition")
     # Only show the version?
     if not version.strip("x-"):
-        print(f"Release script for {NAME}.\n")
-        print("Usage:\n")
-        print("    python release.py 1.2.3\n")
+        print(__doc__)
         print("The current version is:\n")
         print("    " + lines[line_index])
         return
@@ -88,7 +103,6 @@ def release(version):
     if os.path.isdir(dist_dir):
         shutil.rmtree(dist_dir)
     subprocess.run([sys.executable, "setup.py", "sdist", "bdist_wheel"])
-    1 / 0
     subprocess.run([sys.executable, "-m", "twine", "upload", dist_dir + "/*"])
     # Bye bye
     print("Success!")
