@@ -57,7 +57,8 @@ You then need to refresh the JupyterLab page when your javascript changes.
 
 ## Developer notes
 
-The code is autoformatted with `black .` and linted with `flake8 .`.
+The code is autoformatted with `black .` and linted with `flake8 .`. There is
+a `release.py` to make the release process easy.
 
 Optionally, you can setup an autocommit hook to automatically run these on each commit:
 ```
