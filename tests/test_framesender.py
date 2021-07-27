@@ -45,8 +45,8 @@ def test_framesender_1():
     fs.trigger(True)
     assert len(fs.msgs) == 1
 
-    assert fs.stats["sent_frames"] == 1
-    assert fs.stats["confirmed_frames"] == 0
+    assert fs.get_stats()["sent_frames"] == 1
+    assert fs.get_stats()["confirmed_frames"] == 0
 
     # Flush
     fs.frame_feedback["index"] = 1
@@ -57,8 +57,8 @@ def test_framesender_1():
     fs.trigger(False)
     assert len(fs.msgs) == 2
 
-    assert fs.stats["sent_frames"] == 2
-    assert fs.stats["confirmed_frames"] == 1
+    assert fs.get_stats()["sent_frames"] == 2
+    assert fs.get_stats()["confirmed_frames"] == 1
 
     # Flush
     fs.frame_feedback["index"] = 2
@@ -68,23 +68,23 @@ def test_framesender_1():
     fs.trigger(False)
     assert len(fs.msgs) == 2
 
-    assert fs.stats["sent_frames"] == 2
-    assert fs.stats["confirmed_frames"] == 2
+    assert fs.get_stats()["sent_frames"] == 2
+    assert fs.get_stats()["confirmed_frames"] == 2
 
     # Trigger with no request do not trigger a draw
     # We *can* draw but *should* not.
     fs.trigger(False)
     assert len(fs.msgs) == 2
 
-    assert fs.stats["sent_frames"] == 2
-    assert fs.stats["confirmed_frames"] == 2
+    assert fs.get_stats()["sent_frames"] == 2
+    assert fs.get_stats()["confirmed_frames"] == 2
 
     # One more draw
     fs.trigger(True)
     assert len(fs.msgs) == 3
 
-    assert fs.stats["sent_frames"] == 3
-    assert fs.stats["confirmed_frames"] == 2
+    assert fs.get_stats()["sent_frames"] == 3
+    assert fs.get_stats()["confirmed_frames"] == 2
 
 
 def test_framesender_3():
@@ -110,8 +110,8 @@ def test_framesender_3():
     fs.trigger(True)
     assert len(fs.msgs) == 3
 
-    assert fs.stats["sent_frames"] == 3
-    assert fs.stats["confirmed_frames"] == 0
+    assert fs.get_stats()["sent_frames"] == 3
+    assert fs.get_stats()["confirmed_frames"] == 0
 
     # Flush
     fs.frame_feedback["index"] = 3
@@ -122,8 +122,8 @@ def test_framesender_3():
     fs.trigger(True)
     assert len(fs.msgs) == 4
 
-    assert fs.stats["sent_frames"] == 4
-    assert fs.stats["confirmed_frames"] == 3
+    assert fs.get_stats()["sent_frames"] == 4
+    assert fs.get_stats()["confirmed_frames"] == 3
 
     # Flush
     fs.frame_feedback["index"] = 4
@@ -134,8 +134,8 @@ def test_framesender_3():
     fs.trigger(False)
     assert len(fs.msgs) == 4
 
-    assert fs.stats["sent_frames"] == 4
-    assert fs.stats["confirmed_frames"] == 4
+    assert fs.get_stats()["sent_frames"] == 4
+    assert fs.get_stats()["confirmed_frames"] == 4
 
     # We can but should not do a draw
     fs.trigger(False)
