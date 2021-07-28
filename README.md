@@ -26,7 +26,7 @@ to focus on efficiency, e.g. throttling, image compression, partial updates, etc
 
 ## Give it a spin
 
-You can [try jupyter_rfb in MyBinder](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb).
+You can try jupyter_rfb on [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb).
 
 
 ## Installation
