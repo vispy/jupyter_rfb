@@ -2,10 +2,10 @@ import time
 
 import numpy as np
 
-from jupyter_rfb.widget import FrameSenderMixin
+from jupyter_rfb.widget import RemoteFrameBuffer
 
 
-class MyFrameSender(FrameSenderMixin):
+class MyRFB(RemoteFrameBuffer):
 
     max_buffered_frames = 1
 
@@ -30,7 +30,7 @@ class MyFrameSender(FrameSenderMixin):
 
 def test_framesender_1():
 
-    fs = MyFrameSender()
+    fs = MyRFB()
     fs.max_buffered_frames = 1
 
     assert len(fs.msgs) == 0
@@ -89,7 +89,7 @@ def test_framesender_1():
 
 def test_framesender_3():
 
-    fs = MyFrameSender()
+    fs = MyRFB()
     fs.max_buffered_frames = 3
 
     assert len(fs.msgs) == 0
