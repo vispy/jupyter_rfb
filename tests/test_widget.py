@@ -1,7 +1,14 @@
+"""
+Tests the RemoteFrameBuffer widget class.
+
+We don't test it live (in a notebook) here, but other than that these
+tests are pretty complete to test the Python-side logic.
+"""
+
 import time
 
 import numpy as np
-
+from pytest import raises
 from jupyter_rfb.widget import RemoteFrameBuffer
 
 
@@ -22,13 +29,16 @@ class MyRFB(RemoteFrameBuffer):
     def get_frame(self):
         return np.array([[1, 2], [3, 4]], np.uint8)
 
+    def handle_event(self, event):
+        pass
+
     def trigger(self, request):
         if request:
             self._rfb_draw_requested = True
         self._rfb_maybe_draw()
 
 
-def test_framesender_1():
+def test_widget_frames_and_stats_1():
 
     fs = MyRFB()
     fs.max_buffered_frames = 1
@@ -87,7 +97,7 @@ def test_framesender_1():
     assert fs.get_stats()["confirmed_frames"] == 2
 
 
-def test_framesender_3():
+def test_widget_frames_and_stats_3():
 
     fs = MyRFB()
     fs.max_buffered_frames = 3
@@ -161,6 +171,88 @@ def test_framesender_3():
     assert len(fs.msgs) == 8
 
 
+def test_get_frame_can_be_none():
+
+    w = MyRFB()
+    w.max_buffered_frames = 1
+
+    # Make get_frame() return None
+    w.get_frame = lambda: None
+
+    assert len(w.msgs) == 0
+
+    # Request a draw
+    w.trigger(True)
+    assert len(w.msgs) == 0
+
+    # Request another
+    w.trigger(True)
+    w.trigger(True)
+    assert len(w.msgs) == 0
+
+    assert w.get_stats()["sent_frames"] == 0
+    assert w.get_stats()["confirmed_frames"] == 0
+
+
+def test_widget_traits():
+
+    w = RemoteFrameBuffer()
+
+    assert w.frame_feedback == {}
+
+    assert w.max_buffered_frames == 2
+    w.max_buffered_frames = 99
+    w.max_buffered_frames = 1
+    with raises(Exception):  # TraitError -> min 1
+        w.max_buffered_frames = 0
+
+    assert w.css_width.endswith("px")
+    assert w.css_height.endswith("px")
+
+    assert w.resizable
+
+
+def test_widget_default_get_frame():
+
+    w = RemoteFrameBuffer()
+    frame = w.get_frame()
+    assert (frame is None) or frame.shape == (1, 1)
+
+
+def test_requesting_draws():
+
+    # By default no frame is requested
+    w = RemoteFrameBuffer()
+    assert not w._rfb_draw_requested
+
+    # Call request_draw to request a draw
+    w._rfb_draw_requested = False
+    w.request_draw()
+    assert w._rfb_draw_requested
+
+    # On a resize event, a frame is requested too
+    w._rfb_draw_requested = False
+    w._rfb_handle_msg(None, {"event_type": "resize"}, [])
+    assert w._rfb_draw_requested
+
+
+def test_automatic_events():
+
+    w = MyRFB()
+    events = []
+    w.handle_event = lambda event: events.append(event)
+
+    # On closing, an event is emitted
+    # Note that when the model is closed from JS, we emit a close event from there.
+    w.close()
+    assert len(events) == 1 and events[0]["event_type"] == "close"
+
+
 if __name__ == "__main__":
-    test_framesender_1()
-    test_framesender_3()
+    test_widget_frames_and_stats_1()
+    test_widget_frames_and_stats_3()
+    test_get_frame_can_be_none()
+    test_widget_traits()
+    test_widget_default_get_frame()
+    test_requesting_draws()
+    test_automatic_events()
