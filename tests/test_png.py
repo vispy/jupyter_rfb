@@ -101,8 +101,3 @@ def test_writing_failures():
 
     with raises(ValueError):
         array2png(im4.reshape(-1, -1, 8))
-
-
-if __name__ == "__main__":
-    test_writing()
-    test_writing_failures()

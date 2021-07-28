@@ -246,13 +246,3 @@ def test_automatic_events():
     # Note that when the model is closed from JS, we emit a close event from there.
     w.close()
     assert len(events) == 1 and events[0]["event_type"] == "close"
-
-
-if __name__ == "__main__":
-    test_widget_frames_and_stats_1()
-    test_widget_frames_and_stats_3()
-    test_get_frame_can_be_none()
-    test_widget_traits()
-    test_widget_default_get_frame()
-    test_requesting_draws()
-    test_automatic_events()
