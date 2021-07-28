@@ -2,6 +2,10 @@
 
 Remote Frame Buffer for Jupyter
 
+[![PyPI version](https://badge.fury.io/py/jupyter-rfb.svg)](https://badge.fury.io/py/jupyter-rfb)
+![CI](https://github.com/vispy/jupyter_rfb/actions/workflows/ci.yml/badge.svg) 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb).
+
 ## Introduction
 
 The `jupyter_rfb` library provides a widget (an `ipywidgets` subclass)
@@ -22,11 +26,6 @@ example visualization created by tools like vispy, datoviz or pygfx.
 
 The above defines the full scope of this library. This makes it easier
 to focus on efficiency, e.g. throttling, image compression, partial updates, etc.
-
-
-## Give it a spin
-
-You can [try jupyter_rfb in MyBinder](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb).
 
 
 ## Installation
