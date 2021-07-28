@@ -32,7 +32,7 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         // For the frames
         frame_feedback: {},
         // For the widget
-        css_width: '100%',
+        css_width: '500px',
         css_height: '300px',
         resizable: true
     }),

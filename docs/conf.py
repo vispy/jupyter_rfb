@@ -87,6 +87,7 @@ nbsphinx_prolog = """
         font-size: 85%;
     }
     a.jrfb, a.jrfb:active, a.jrfb:hover {
+        color: #000;
         text-decoration: none;
     }
     a.jrfb:hover {
@@ -110,7 +111,7 @@ nbsphinx_prolog = """
         </a>
 
         <a class=''
-            href='https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=tree/{{ env.docname }}.ipynb'
+            href='https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/{{ env.docname }}.ipynb'
             >
         <img src='https://mybinder.org/badge_logo.svg' />
         </a>
