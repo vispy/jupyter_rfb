@@ -15,12 +15,11 @@ This script will then:
     * Push these to Pypi.
 """
 
-import os
-import sys
-import shutil
 import importlib
+import os
+import shutil
 import subprocess
-
+import sys
 
 NAME = "jupyter_rfb"
 LIBNAME = NAME.replace("-", "_")
