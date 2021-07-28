@@ -1,5 +1,4 @@
-"""
-Tests the RemoteFrameBuffer widget class.
+"""Tests the RemoteFrameBuffer widget class.
 
 We don't test it live (in a notebook) here, but other than that these
 tests are pretty complete to test the Python-side logic.
