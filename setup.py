@@ -53,6 +53,7 @@ setup_args = dict(
         "numpy",
         "ipywidgets>=7.6.0",
     ],
+    python_requires=">=3.6",
     packages=find_packages(),
     zip_safe=False,
     cmdclass=cmdclass,
