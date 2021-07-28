@@ -110,7 +110,7 @@ nbsphinx_prolog = """
         </a>
 
         <a class=''
-            href='https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?filepath={{ env.docname }}.ipynb'
+            href='https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=tree/{{ env.docname }}.ipynb'
             >
         <img src='https://mybinder.org/badge_logo.svg' />
         </a>
