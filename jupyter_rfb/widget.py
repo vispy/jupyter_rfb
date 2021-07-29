@@ -26,6 +26,7 @@ from ._png import array2png
 @ipywidgets.register
 class RemoteFrameBuffer(ipywidgets.DOMWidget):
     """A widget that shows a remote frame buffer.
+
     Subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
 
     This widget has the following traits:
@@ -78,8 +79,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
 
     def close(self, *args, **kwargs):
-        """close()
-        Closes all views of the widget and renders it unusable.
+        """Close all views of the widget and renders it unusable.
+
         Also emits a close event.
         """
         # When the widget is closed, we notify by creating a close event. The
@@ -97,8 +98,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     # ---- drawing
 
     def request_draw(self):
-        """Schedule a new draw when the widget is ready for it. During
-        a draw, the ``get_frame()`` method is called, and the resulting
+        """Schedule a new draw when the widget is ready for it.
+
+        During a draw, the ``get_frame()`` method is called, and the resulting
         array is sent to the client. This method is automatically called
         on each resize event.
         """
@@ -163,6 +165,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
     def reset_stats(self):
         """Reset the stats (start measuring from this point in time).
+
         Note that the FPS measurement starts on the first frame drawn
         after this call.
         """
@@ -179,8 +182,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         }
 
     def get_stats(self):
-        """Get the current stats since the last time ``reset_stats()``
-        was called. Stats is a dict with the following fields:
+        """Get the current stats since the last time ``reset_stats()`` was called.
+
+        Stats is a dict with the following fields:
 
         * *sent_frames*: the number of frames sent.
         * *confirmed_frames*: number of frames confirmed to be reveived by the client.
@@ -226,15 +230,17 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     # ----- for the subclass to implement
 
     def get_frame(self):
-        """The method that is called during a draw to obtain a new
-        frame. Subclasses should overload this. May return ``None`` to
+        """Return image array for the next frame.
+
+        Subclasses should overload this. May return ``None`` to
         cancel the draw.
         """
         return np.ones((1, 1), np.uint8) * 127
 
     def handle_event(self, event):
-        """The method that is called on each event. Overload this to process
-        incoming events. An event is a dict with at least the key *event_type*.
+        """Handle each event that gets produced.
+
+        Overload this to process incoming events. An event is a dict with at least the key *event_type*.
         See the docs of ``jupyter_rfb.events`` for details.
         """
         pass
