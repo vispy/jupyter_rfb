@@ -149,6 +149,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_stats["img_encoding_sum"] += t2 - t1
         self._rfb_stats["b64_encoding_sum"] += t3 - t2
         self._rfb_stats["sent_frames"] += 1
+        if self._rfb_stats["start_time"] <= 0:  # Start measuring
+            self._rfb_stats["start_time"] = timestamp
+            self._rfb_last_confirmed_index = self._rfb_frame_index - 1
 
         # Compose message and send
         msg = dict(
@@ -162,10 +165,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     # ----- related to stats
 
     def reset_stats(self):
-        """Reset the stats (start measuring from this point in time).
-
-        Note that the FPS measurement starts on the first frame drawn
-        after this call.
+        """Restart measuring statistics from the next sent frame.
         """
         self._rfb_stats = {
             "start_time": 0,
@@ -191,10 +191,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
           This measure assumes that the clock of the server and client are precisely synced.
         * *img_encoding*: the average time spent on encoding the array into an image.
         * *b64_encoding*: the average time spent on base64 encoding the data.
-        * *fps*: the average FPS, measured by deviding the number of confirmed
-          frames by the run-time, where run-time is the time from when the first
-          frame was sent (since ``reset_stats()`` was called), until the last
-          frame was confirmed.
+        * *fps*: the average FPS, measured from the first frame sent since `reset_stats()`` was
+          called, until the last confirmed frame.
         """
         d = self._rfb_stats
         roundtrip_count_div = d["roundtrip_count"] or 1
@@ -222,8 +220,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
             self._rfb_stats["roundtrip_sum"] += time.time() - timestamp
             self._rfb_stats["delivery_sum"] += feedback["localtime"] - timestamp
             self._rfb_stats["last_time"] = time.time()
-            if not self._rfb_stats["start_time"]:
-                self._rfb_stats["start_time"] = timestamp
 
     # ----- for the subclass to implement
 
