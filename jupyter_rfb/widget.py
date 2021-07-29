@@ -28,6 +28,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     """A widget that shows a remote frame buffer.
 
     Subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
+    To use this class, it should be subclassed, and its ``get_frame()``
+    and ``handle_event()`` methods should be implemented.
 
     This widget has the following traits:
 
@@ -38,8 +40,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
       i.e. sent, but not yet confirmed by the client. Default 2. Higher values
       may result in a higher FPS at the cost of introducing lag.
 
-    To use this class, it should be subclassed, and its ``get_frame()``
-    and ``handle_event()`` methods should be implemented.
     """
 
     # Name of the widget view class in front-end
@@ -79,9 +79,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
 
     def close(self, *args, **kwargs):
-        """Close all views of the widget and renders it unusable.
-
-        Also emits a close event.
+        """Close all views of the widget and emit a close event.
         """
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
@@ -232,15 +230,17 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def get_frame(self):
         """Return image array for the next frame.
 
-        Subclasses should overload this. May return ``None`` to
-        cancel the draw.
+        Subclasses should overload this method. It is automatically called during a draw.
+        The returned numpy array must be NxM (grayscale), NxMx3 (RGB) or NxMx4 (RGBA).
+        May also return ``None`` to cancel the draw.
         """
         return np.ones((1, 1), np.uint8) * 127
 
     def handle_event(self, event):
-        """Handle each event that gets produced.
+        """Handle an incoming event.
 
-        Overload this to process incoming events. An event is a dict with at least the key *event_type*.
-        See the docs of ``jupyter_rfb.events`` for details.
+        Subclasses should overload this method. Events include widget resize,
+        mouse/touch interaction, key events, and more. An event is a dict with at least
+        the key *event_type*. See the docs of ``jupyter_rfb.events`` for details.
         """
         pass
