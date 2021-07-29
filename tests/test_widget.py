@@ -12,6 +12,7 @@ from jupyter_rfb.widget import RemoteFrameBuffer
 
 
 class MyRFB(RemoteFrameBuffer):
+    """RFB class to use in the tests."""
 
     max_buffered_frames = 1
 
@@ -23,21 +24,30 @@ class MyRFB(RemoteFrameBuffer):
         self.msgs = []
 
     def send(self, msg):
+        """Overload the send method so we can check what was sent."""
         self.msgs.append(msg)
 
     def get_frame(self):
+        """Return a stub array."""
         return np.array([[1, 2], [3, 4]], np.uint8)
 
     def handle_event(self, event):
+        """Implement to do nothing.
+
+        Just to make sure that some events that are automatically sent
+        dont rely on the super to be called.
+        """
         pass
 
     def trigger(self, request):
+        """Simulate an "event loop iteration", optionally request a new draw."""
         if request:
             self._rfb_draw_requested = True
         self._rfb_maybe_draw()
 
 
 def test_widget_frames_and_stats_1():
+    """Test sending frames with max 1 in-flight, and how it affects stats."""
 
     fs = MyRFB()
     fs.max_buffered_frames = 1
@@ -97,6 +107,7 @@ def test_widget_frames_and_stats_1():
 
 
 def test_widget_frames_and_stats_3():
+    """Test sending frames with max 3 in-flight, and how it affects stats."""
 
     fs = MyRFB()
     fs.max_buffered_frames = 3
@@ -171,7 +182,7 @@ def test_widget_frames_and_stats_3():
 
 
 def test_get_frame_can_be_none():
-
+    """Test that the frame can be None to cancel a draw."""
     w = MyRFB()
     w.max_buffered_frames = 1
 
@@ -194,6 +205,7 @@ def test_get_frame_can_be_none():
 
 
 def test_widget_traits():
+    """Test the widget's traits default values."""
 
     w = RemoteFrameBuffer()
 
@@ -212,6 +224,7 @@ def test_widget_traits():
 
 
 def test_widget_default_get_frame():
+    """Test default return value of get_frame()."""
 
     w = RemoteFrameBuffer()
     frame = w.get_frame()
@@ -219,6 +232,7 @@ def test_widget_default_get_frame():
 
 
 def test_requesting_draws():
+    """Test that requesting draws works as intended."""
 
     # By default no frame is requested
     w = RemoteFrameBuffer()
@@ -236,6 +250,7 @@ def test_requesting_draws():
 
 
 def test_automatic_events():
+    """Test that some events are indeed emitted automatically."""
 
     w = MyRFB()
     events = []

@@ -1,6 +1,4 @@
-"""
-Test png module
-"""
+"""Test png module."""
 
 import os
 import tempfile
@@ -56,6 +54,7 @@ shapes = shape0, shape1, shape2, shape3, shape4
 
 
 def test_writing():
+    """Test writing png."""
 
     # Get bytes
     b0 = array2png(im0)
@@ -89,6 +88,7 @@ def test_writing():
 
 
 def test_writing_failures():
+    """Test that errors are raised when needed."""
 
     with raises(ValueError):
         array2png([1, 2, 3, 4])

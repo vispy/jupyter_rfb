@@ -121,7 +121,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         feedback = self.frame_feedback
         self._rfb_update_stats(feedback)
         frames_in_flight = self._rfb_frame_index - feedback.get("index", 0)
-        if (self._rfb_draw_requested and frames_in_flight < self.max_buffered_frames):
+        if self._rfb_draw_requested and frames_in_flight < self.max_buffered_frames:
             self._rfb_draw_requested = False
             array = self.get_frame()
             if array is not None:
