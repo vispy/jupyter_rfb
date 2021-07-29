@@ -6,13 +6,13 @@ import numpy as np
 
 
 def array2png(array, file=None):
-    """
-    Create a png image from a numpy array. The written image is in RGB
-    or RGBA format, with 8 bit precision, zlib-compressed, without interlacing.
+    """Create a png image from a numpy array.
 
-    Parameters:
-        array (ndarray): the image data to write. The shape must be either
-        NxM (grayscale), NxMx1 (grayscale), NxMx3 (RGB) or NxNx4 (RGBA).
+    The written image is in RGB or RGBA format, with 8 bit precision,
+    zlib-compressed, without interlacing.
+
+    The provided array's shape must be either NxM (grayscale), NxMx1 (grayscale),
+    NxMx3 (RGB) or NxNx4 (RGBA).
     """
 
     # Check types

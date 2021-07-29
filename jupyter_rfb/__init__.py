@@ -1,6 +1,7 @@
-from . import events  # noqa: F401
-from ._version import __version__, version_info  # noqa: F401
-from .widget import RemoteFrameBuffer  # noqa: F401
+# flake8: noqa
+from . import events
+from ._version import __version__, version_info
+from .widget import RemoteFrameBuffer
 
 
 def _jupyter_labextension_paths():

@@ -55,6 +55,7 @@ information regarding the event. The possible event types are:
 
 """
 
+# flake8: noqa
 # The only purpose of this module is to document the events.
 # In Sphinx autodoc we can use automodule.
 # In Pyzo/Spyder/Jupyter a user can do ``jupyter_rfb.events?``.

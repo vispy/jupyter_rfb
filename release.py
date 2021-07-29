@@ -1,4 +1,4 @@
-"""Release script for jupyter_rfb
+"""Release script for jupyter_rfb.
 
 Usage:
 
@@ -28,13 +28,9 @@ if not os.path.isdir(os.path.join(ROOT_DIR, LIBNAME)):
     sys.exit("package NAME seems to be incorrect.")
 
 
-def main():
-    """Bump the version. If no version is specified, show the current version."""
-    version = ".".join(sys.argv[1:])
-    release(version)
-
-
 def release(version):
+    """Bump the version and create a release. If no version is specified, show the current version."""
+
     version = version.lstrip("v")
     version_info = tuple(
         int(part) if part.isnumeric() else part for part in version.split(".")
@@ -64,8 +60,10 @@ def release(version):
     filename = os.path.join(ROOT_DIR, LIBNAME, "_version.py")
     with open(filename, "rb") as f:
         lines = f.read().decode().splitlines()
-    for line_index, line in enumerate(lines):
+    line_index = -1
+    for i, line in enumerate(lines):
         if line.startswith("version_info = "):
+            line_index = i
             break
     else:
         raise ValueError("Could not find version definition")
@@ -110,4 +108,5 @@ def release(version):
 
 
 if __name__ == "__main__":
-    main()
+    version = ".".join(sys.argv[1:])
+    release(version)

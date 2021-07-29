@@ -1,18 +1,9 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
+"""Configuration script for Sphinx."""
 
 import os
 import shutil
 import sys
+
 
 ROOT_DIR = os.path.abspath(os.path.join(__file__, "..", ".."))
 sys.path.insert(0, ROOT_DIR)
@@ -23,6 +14,7 @@ import jupyter_rfb  # noqa: F401, E402
 
 
 def insert_examples():
+    """Copy notebooks from examples dir to docs and create an index."""
     dir1 = os.path.join(ROOT_DIR, "examples")
     dir2 = os.path.join(ROOT_DIR, "docs", "examples")
     # Collect examples
