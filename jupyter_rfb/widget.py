@@ -79,8 +79,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
 
     def close(self, *args, **kwargs):
-        """Close all views of the widget and emit a close event.
-        """
+        """Close all views of the widget and emit a close event."""
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
         super().close(*args, **kwargs)
@@ -121,12 +120,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         """Perform a draw, if we can and should."""
         feedback = self.frame_feedback
         self._rfb_update_stats(feedback)
-        last_index = feedback.get("index", 0)
-        max_buffered = max(0, self.max_buffered_frames)
-        if (
-            self._rfb_draw_requested
-            and last_index > self._rfb_frame_index - max_buffered
-        ):
+        frames_in_flight = self._rfb_frame_index - feedback.get("index", 0)
+        if (self._rfb_draw_requested and frames_in_flight < self.max_buffered_frames):
             self._rfb_draw_requested = False
             array = self.get_frame()
             if array is not None:
@@ -165,8 +160,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     # ----- related to stats
 
     def reset_stats(self):
-        """Restart measuring statistics from the next sent frame.
-        """
+        """Restart measuring statistics from the next sent frame."""
         self._rfb_stats = {
             "start_time": 0,
             "last_time": 1,
