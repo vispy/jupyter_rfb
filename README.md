@@ -63,6 +63,10 @@ You then need to refresh the JupyterLab page when your javascript changes.
 
 ## Developer notes
 
+To install developer tools:
+
+    $ pip install pytest black flake8 flake8-docstrings flake8-bugbear
+
 The code is autoformatted with `black .` and linted with `flake8 .`. There is
 a `release.py` to make the release process easy.
 
