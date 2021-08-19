@@ -37,6 +37,10 @@ To install use pip:
 On older versions of Jupyter notebook/lab an extra step might be needed
 to enable the widget.
 
+To install into an existing conda environment:
+
+    $ conda install -c conda-forge jupyter-rfb
+
 
 ## Development installation
 

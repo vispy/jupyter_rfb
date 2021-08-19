@@ -10,6 +10,12 @@ To install use pip:
 
     pip install -U jupyter_rfb
 
+Or to install into an existing conda environment:
+
+.. code-block::
+
+    conda install -c conda-forge jupyter-rfb
+
 Developers, see the `readme <https://github.com/vispy/jupyter_rfb>`_ for a dev installation.
 
 
