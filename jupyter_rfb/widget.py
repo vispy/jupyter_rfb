@@ -111,6 +111,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
 
+    _ipython_display_ = None  # we use _repr_mimebundle_ instread
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Setup an output widget, so that any prints and errors in our
@@ -127,6 +129,57 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Setup events
         self.on_msg(self._rfb_handle_msg)
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
+
+    def _repr_mimebundle_(self, **kwargs):
+
+        data = {}
+
+        # Get the actual representation
+        try:
+            data.update(super()._repr_mimebundle_(**kwargs))
+        except Exception:
+            # On 7.6.3 and below, _ipython_display_ is used instead of _repr_mimebundle_.
+            # We fill in the widget representation that has been in use for 5+ years.
+            data["application/vnd.jupyter.widget-view+json"] = {
+                "version_major": 2,
+                "version_minor": 0,
+                "model_id": self._model_id,
+            }
+
+        data = {}
+
+        # Always add plain text
+        plaintext = repr(self)
+        if len(plaintext) > 110:
+            plaintext = plaintext[:110] + "…"
+        data["text/plain"] = plaintext
+
+        # Add initial "snapshot"
+        if self._view_name is not None:
+            # Send the first stub resize event
+            css_width, css_height = self.css_width, self.css_height
+            w = float(css_width[:-2]) if css_width.endswith("px") else 500
+            h = float(css_height[:-2]) if css_height.endswith("px") else 300
+            evt = {"event_type": "resize", "width": w, "height": h, "pixel_ratio": 1}
+            self.handle_event(evt)
+            # Render a frame and convert to png
+            array = self.get_frame()
+            png_data = array2png(array)
+            preamble = "data:image/png;base64,"
+            src = preamble + encodebytes(png_data).decode()
+            # Create html repr
+            img_style = f"width:{w}px;height:{h}px;"
+            tt_style = "position: absolute; top:0; left:0; padding:1px 3px; "
+            tt_style += "background: #777; color:#fff; font-size: 90%; "
+            data[
+                "text/html"
+            ] = f"""
+                <div style='position:relative;'>
+                    <img src='{src}' style='{img_style}' />
+                    <div style='{tt_style}'>static snapshot</div>
+                </div>
+                """
+        return data
 
     def print(self, *args, **kwargs):
         """Print to the widget's output area (For debugging purposes).
@@ -151,6 +204,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         if "event_type" in content:
             if content["event_type"] == "resize":
                 self.request_draw()
+            elif content["event_type"] == "close":
+                self._repr_mimebundle_ = None
             with self._output_context:
                 self.handle_event(content)
 
