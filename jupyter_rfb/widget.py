@@ -116,8 +116,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Setup an output widget, so that any prints and errors in our
         # callbacks are actually shown. We display the output in the cell-output
         # corresponding to the cell that instantiates the widget.
-        self._output_contex = OutputContext()
-        display(self._output_contex)
+        self._output_context = OutputContext()
+        display(self._output_context)
         # Init attributes for drawing
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
@@ -129,18 +129,15 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
 
     def print(self, *args, **kwargs):
-        """Print to the widget's output area.
+        """Print to the widget's output area (For debugging purposes).
 
         In Jupyter, print calls that occur in a callback or an asyncio task
         may (depending on your version of the notebook/lab) not be shown.
         Inside ``get_frame()`` and ``handle_event()`` you can use this method
-        instead. Exceptions raised from these functions always show up
-        in the output area.
-
-        The signature of this method is fully compatible with the builtin print
-        function (except for the file argument).
+        instead. The signature of this method is fully compatible with
+        the builtin print function (except for the ``file`` argument).
         """
-        self._output_contex.print(*args, **kwargs)
+        self._output_context.print(*args, **kwargs)
 
     def close(self, *args, **kwargs):
         """Close all views of the widget and emit a close event."""
@@ -154,7 +151,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         if "event_type" in content:
             if content["event_type"] == "resize":
                 self.request_draw()
-            with self._output_contex:
+            with self._output_context:
                 self.handle_event(content)
 
     # ---- drawing
@@ -188,7 +185,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         frames_in_flight = self._rfb_frame_index - feedback.get("index", 0)
         if self._rfb_draw_requested and frames_in_flight < self.max_buffered_frames:
             self._rfb_draw_requested = False
-            with self._output_contex:
+            with self._output_context:
                 array = self.get_frame()
                 if array is not None:
                     self._rfb_send_frame(array)
