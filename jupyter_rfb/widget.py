@@ -12,15 +12,60 @@ last confirmed frame. As such, if the client processes frames slower,
 the server will slow down too.
 """
 
+import io
+import builtins
+import traceback
 import asyncio
 import time
 from base64 import encodebytes
 
 import ipywidgets
 import numpy as np
+from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
 from ._png import array2png
+
+
+_original_print = builtins.print
+
+
+class OutputContext(ipywidgets.Output):
+    """An output widget with a different implementation of the context manager.
+
+    Handles prints and errors in a more reliable way, that is also
+    lightweight (i.e. no peformance cost).
+
+    See https://github.com/vispy/jupyter_rfb/issues/35
+    """
+
+    capture_print = False
+    _prev_print = None
+
+    def print(self, *args, **kwargs):
+        """Print function that show up in the output."""
+        f = io.StringIO()
+        kwargs.pop("file", None)
+        _original_print(*args, file=f, flush=True, **kwargs)
+        text = f.getvalue()
+        self.append_stdout(text)
+
+    def __enter__(self):
+        """Enter context, replace print function."""
+        if self.capture_print:
+            self._prev_print = builtins.print
+            builtins.print = self.print
+        return self
+
+    def __exit__(self, etype, value, tb):
+        """Exit context, restore print function and show any errors."""
+        if self.capture_print and self._prev_print is not None:
+            builtins.print = self._prev_print
+            self._prev_print = None
+        if etype:
+            err = "".join(traceback.format_exception(etype, value, tb))
+            self.append_stderr(err)
+            return True  # declare that we handled the exception
 
 
 @ipywidgets.register
@@ -68,6 +113,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Setup an output widget, so that any prints and errors in our
+        # callbacks are actually shown. We display the output in the cell-output
+        # corresponding to the cell that instantiates the widget.
+        self._output_context = OutputContext()
+        display(self._output_context)
         # Init attributes for drawing
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
@@ -77,6 +127,17 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Setup events
         self.on_msg(self._rfb_handle_msg)
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
+
+    def print(self, *args, **kwargs):
+        """Print to the widget's output area (For debugging purposes).
+
+        In Jupyter, print calls that occur in a callback or an asyncio task
+        may (depending on your version of the notebook/lab) not be shown.
+        Inside ``get_frame()`` and ``handle_event()`` you can use this method
+        instead. The signature of this method is fully compatible with
+        the builtin print function (except for the ``file`` argument).
+        """
+        self._output_context.print(*args, **kwargs)
 
     def close(self, *args, **kwargs):
         """Close all views of the widget and emit a close event."""
@@ -90,7 +151,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         if "event_type" in content:
             if content["event_type"] == "resize":
                 self.request_draw()
-            self.handle_event(content)
+            with self._output_context:
+                self.handle_event(content)
 
     # ---- drawing
 
@@ -123,9 +185,10 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         frames_in_flight = self._rfb_frame_index - feedback.get("index", 0)
         if self._rfb_draw_requested and frames_in_flight < self.max_buffered_frames:
             self._rfb_draw_requested = False
-            array = self.get_frame()
-            if array is not None:
-                self._rfb_send_frame(array)
+            with self._output_context:
+                array = self.get_frame()
+                if array is not None:
+                    self._rfb_send_frame(array)
 
     def _rfb_send_frame(self, array):
         """Actually send a frame over to the client."""

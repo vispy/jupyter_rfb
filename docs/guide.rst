@@ -80,6 +80,23 @@ second. This is to avoid spamming the io and server process. The
 throttling applies to the resize, scroll, and pointer_move events.
 
 
+Exceptions and logging
+----------------------
+
+The ``handle_event()`` and ``get_frame()`` methods are called from a COM event
+and in an asyncio task, respectively. Under these circumstances,
+Jupyter Lab/Notebook may swallow exceptions and writes to stdout/stderr.
+See `issue #35 <https://github.com/vispy/jupyter_rfb/issues/35>`_ for details.
+
+In jupyter_rfb we take measures such that exceptions raised in
+either of these methods result in a traceback shown right above the
+widget. To ensure that calls to ``print()`` in these methods are also
+shown, use ``self.print()`` instead.
+
+Note that any other streaming to stdout and stderr (e.g. logging) may
+not become visible anywhere.
+
+
 Measuring statistics
 --------------------
 
