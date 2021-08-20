@@ -68,6 +68,57 @@ class OutputContext(ipywidgets.Output):
             return True  # declare that we handled the exception
 
 
+class Snapshot:
+    """An object representing an image snapshot from a RemoteFrameBuffer.
+
+    Use this object as a cell output to show the image in the output.
+    """
+
+    def __init__(self, array, width, height, title="snapshot", class_name=None):
+        self._array = array
+        self._width = width
+        self._height = height
+        self._title = title
+        self._class_name = class_name
+
+    def _repr_mimebundle_(self, **kwargs):
+        return {"text/html": self._get_html()}
+
+    def get_array(self):
+        """Return the snapshot as a numpy array."""
+        return self._array
+
+    def save(self, file):
+        """Save the snapshot to a file-object or filename, in PNG format."""
+        png_data = array2png(self._array)
+        if hasattr(file, "write"):
+            file.write(png_data)
+        else:
+            with open(file, "wb") as f:
+                f.write(png_data)
+
+    def _get_html(self, id=None):
+        if self._array is None:
+            return ""
+        # Convert to PNG
+        png_data = array2png(self._array)
+        preamble = "data:image/png;base64,"
+        src = preamble + encodebytes(png_data).decode()
+        # Create html repr
+        class_str = f"class='{self._class_name}'" if self._class_name else ""
+        img_style = f"width:{self._width}px;height:{self._height}px;"
+        tt_style = "position: absolute; top:0; left:0; padding:1px 3px; "
+        tt_style += (
+            "background: #777; color:#fff; font-size: 90%; font-family:sans-serif; "
+        )
+        return f"""
+            <div {class_str} style='position:relative;'>"
+                <img src='{src}' style='{img_style}' />"
+                <div style='{tt_style}'>{self._title}</div>"
+            </div>
+            """.replace("\n", "").replace("        ", "").replace("    ", "").strip()
+
+
 @ipywidgets.register
 class RemoteFrameBuffer(ipywidgets.DOMWidget):
     """A widget that shows a remote frame buffer.
@@ -111,10 +162,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
 
-    _ipython_display_ = None  # we use _repr_mimebundle_ instread
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._ipython_display_ = None  # we use _repr_mimebundle_ instread
         # Setup an output widget, so that any prints and errors in our
         # callbacks are actually shown. We display the output in the cell-output
         # corresponding to the cell that instantiates the widget.
@@ -124,6 +174,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
         self._rfb_last_confirmed_index = 0
+        self._rfb_last_resize_event = None
         # Init stats
         self.reset_stats()
         # Setup events
@@ -133,6 +184,12 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def _repr_mimebundle_(self, **kwargs):
 
         data = {}
+
+        # Always add plain text
+        plaintext = repr(self)
+        if len(plaintext) > 110:
+            plaintext = plaintext[:110] + "…"
+        data["text/plain"] = plaintext
 
         # Get the actual representation
         try:
@@ -146,39 +203,19 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
                 "model_id": self._model_id,
             }
 
-        data = {}
-
-        # Always add plain text
-        plaintext = repr(self)
-        if len(plaintext) > 110:
-            plaintext = plaintext[:110] + "…"
-        data["text/plain"] = plaintext
-
-        # Add initial "snapshot"
+        # Add initial snapshot. It would be awesome if, when the
+        # notebook is offline, this representation is used instead of
+        # application/vnd.jupyter.widget-view+json. And in fact, Gihub's
+        # renderer does this. Unfortunately, nbconvert still selects
+        # the widget mimetype.
+        # So instead, we display() the snapshot right in front of the
+        # actual widget view, and when the widget view is created, it
+        # hides the snapshot. Ha! That way, the snapshot is
+        # automatically shown when the widget is not loaded!
         if self._view_name is not None:
-            # Send the first stub resize event
-            css_width, css_height = self.css_width, self.css_height
-            w = float(css_width[:-2]) if css_width.endswith("px") else 500
-            h = float(css_height[:-2]) if css_height.endswith("px") else 300
-            evt = {"event_type": "resize", "width": w, "height": h, "pixel_ratio": 1}
-            self.handle_event(evt)
-            # Render a frame and convert to png
-            array = self.get_frame()
-            png_data = array2png(array)
-            preamble = "data:image/png;base64,"
-            src = preamble + encodebytes(png_data).decode()
-            # Create html repr
-            img_style = f"width:{w}px;height:{h}px;"
-            tt_style = "position: absolute; top:0; left:0; padding:1px 3px; "
-            tt_style += "background: #777; color:#fff; font-size: 90%; "
-            data[
-                "text/html"
-            ] = f"""
-                <div style='position:relative;'>
-                    <img src='{src}' style='{img_style}' />
-                    <div style='{tt_style}'>static snapshot</div>
-                </div>
-                """
+            # data["text/html"] = self.snapshot()._get_html()
+            display(self.snapshot(None, _initial=True))
+
         return data
 
     def print(self, *args, **kwargs):
@@ -203,6 +240,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
             if content["event_type"] == "resize":
+                self._rfb_last_resize_event = content
                 self.request_draw()
             elif content["event_type"] == "close":
                 self._repr_mimebundle_ = None
@@ -210,6 +248,43 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
                 self.handle_event(content)
 
     # ---- drawing
+
+    def snapshot(self, pixel_ratio=None, _initial=False):
+        """Create a snapshot of the current state of the widget.
+
+        Returns a ``Snapshot`` object that can simply be used as a cell output.
+        """
+        # Start with a resize event to the appropriate pixel ratio
+        ref_resize_event = self._rfb_last_resize_event
+        if ref_resize_event:
+            w = ref_resize_event["width"]
+            h = ref_resize_event["height"]
+        else:
+            pixel_ratio = pixel_ratio or 1
+            css_width, css_height = self.css_width, self.css_height
+            w = float(css_width[:-2]) if css_width.endswith("px") else 500
+            h = float(css_height[:-2]) if css_height.endswith("px") else 300
+        if pixel_ratio:
+            evt = {
+                "event_type": "resize",
+                "width": w,
+                "height": h,
+                "pixel_ratio": pixel_ratio,
+            }
+            self.handle_event(evt)
+        # Render a frame
+        array = self.get_frame()
+        # Reset pixel ratio
+        if ref_resize_event and pixel_ratio:
+            self.handle_event(ref_resize_event)
+        # Create snapshot object
+        if _initial:
+            title = "initial snapshot"
+            class_name = "initial-snapshot-" + self._model_id
+        else:
+            title = "snapshot"
+            class_name = "snapshot-" + self._model_id
+        return Snapshot(array, w, h, title, class_name)
 
     def request_draw(self):
         """Schedule a new draw when the widget is ready for it.
