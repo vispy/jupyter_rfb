@@ -8,7 +8,7 @@ import time
 
 import numpy as np
 from pytest import raises
-from jupyter_rfb.widget import RemoteFrameBuffer
+from jupyter_rfb import RemoteFrameBuffer, Snapshot
 
 
 class MyRFB(RemoteFrameBuffer):
@@ -260,3 +260,20 @@ def test_automatic_events():
     # Note that when the model is closed from JS, we emit a close event from there.
     w.close()
     assert len(events) == 1 and events[0]["event_type"] == "close"
+
+
+def test_print():
+    """Test that the widget has a fully featured print method."""
+    w = MyRFB()
+    w.print("foo bar", sep="-", end=".")
+    # mmm, a bit hard to see where the data has ended up,
+    # but if it did not error, that's something!
+    # We test the printing itself in test_utils.py
+
+
+def test_snapshot():
+    """Test that the widget has a snapshot method that produces a Snapshot."""
+    w = MyRFB()
+    s = w.snapshot()
+    assert isinstance(s, Snapshot)
+    assert np.all(s.get_array() == w.get_frame())
