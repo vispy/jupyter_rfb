@@ -10,6 +10,13 @@ RemoteFrameBuffer class
     :member-order: bysource
 
 
+Snapshot class
+--------------
+
+.. autoclass:: jupyter_rfb.Snapshot
+    :members:
+
+
 Events
 ------
 
