@@ -88,7 +88,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
 
     def _repr_mimebundle_(self, **kwargs):
-
         data = {}
 
         # Always add plain text
