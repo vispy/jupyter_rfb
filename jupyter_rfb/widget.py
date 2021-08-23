@@ -71,8 +71,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._ipython_display_ = None  # we use _repr_mimebundle_ instread
-        # Setup an output widget, so that any prints and errors in our
-        # callbacks are actually shown. We display the output in the cell-output
+        # Setup an output widget, so that any errors in our callbacks
+        # are actually shown. We display the output in the cell-output
         # corresponding to the cell that instantiates the widget.
         self._output_context = RFBOutputContext()
         display(self._output_context)
