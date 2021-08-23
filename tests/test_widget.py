@@ -8,7 +8,8 @@ import time
 
 import numpy as np
 from pytest import raises
-from jupyter_rfb import RemoteFrameBuffer, Snapshot
+from jupyter_rfb import RemoteFrameBuffer
+from jupyter_rfb._utils import Snapshot
 
 
 class MyRFB(RemoteFrameBuffer):
@@ -276,4 +277,4 @@ def test_snapshot():
     w = MyRFB()
     s = w.snapshot()
     assert isinstance(s, Snapshot)
-    assert np.all(s.get_array() == w.get_frame())
+    assert np.all(s.data == w.get_frame())
