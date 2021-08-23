@@ -158,7 +158,10 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def snapshot(self, pixel_ratio=None, _initial=False):
         """Create a snapshot of the current state of the widget.
 
-        Returns a ``Snapshot`` object that can simply be used as a cell output.
+        Returns an ``IPython DisplayObject`` that can simply be used as
+        a cell output. May also return None if ``get_frame()`` produces
+        None. The display object has a ``data`` attribute that holds
+        the image array data (typically a numpy array).
         """
         # Start with a resize event to the appropriate pixel ratio
         ref_resize_event = self._rfb_last_resize_event
@@ -184,12 +187,15 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         if ref_resize_event and pixel_ratio:
             self.handle_event(ref_resize_event)
         # Create snapshot object
-        if _initial:
+        if array is None:
+            return None
+        elif _initial:
             title = "initial snapshot"
             class_name = "initial-snapshot-" + self._model_id
         else:
             title = "snapshot"
             class_name = "snapshot-" + self._model_id
+
         return Snapshot(array, w, h, title, class_name)
 
     def request_draw(self):

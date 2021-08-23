@@ -3,6 +3,7 @@ import builtins
 import traceback
 from base64 import encodebytes
 
+from IPython.display import DisplayObject
 import ipywidgets
 
 from ._png import array2png
@@ -48,45 +49,37 @@ class RFBOutputContext(ipywidgets.Output):
             return True  # declare that we handled the exception
 
 
-class Snapshot:
-    """An object representing an image snapshot from a RemoteFrameBuffer.
+class Snapshot(DisplayObject):
+    """An IPython DisplayObject representing an image snapshot.
 
-    Use this object as a cell output to show the image in the output.
+    The ``data`` attribute is the image array object. One could use
+    this to process the data further, e.g. storing it to disk.
     """
 
-    def __init__(self, array, width, height, title="snapshot", class_name=None):
-        self._array = array
-        self._width = width
-        self._height = height
-        self._title = title
-        self._class_name = class_name
+    # Not an IPython.display.Image, because we want to use some HTML to
+    # give it a custom css class and a title.
+
+    def __init__(self, data, width, height, title="snapshot", class_name=None):
+        super().__init__(data)
+        self.width = width
+        self.height = height
+        self.title = title
+        self.class_name = class_name
+
+    def _check_data(self):
+        assert hasattr(self.data, "shape") and hasattr(self.data, "dtype")
 
     def _repr_mimebundle_(self, **kwargs):
-        return {"text/html": self._get_html()}
+        return {"text/html": self._repr_html_()}
 
-    def get_array(self):
-        """Return the snapshot as a numpy array."""
-        return self._array
-
-    def save(self, file):
-        """Save the snapshot to a file-object or filename, in PNG format."""
-        png_data = array2png(self._array)
-        if hasattr(file, "write"):
-            file.write(png_data)
-        else:
-            with open(file, "wb") as f:
-                f.write(png_data)
-
-    def _get_html(self, id=None):
-        if self._array is None:
-            return ""
+    def _repr_html_(self):
         # Convert to PNG
-        png_data = array2png(self._array)
-        preamble = "data:image/png;base64"
+        png_data = array2png(self.data)
+        preamble = "data:image/png;base64,"
         src = preamble + encodebytes(png_data).decode()
         # Create html repr
-        class_str = f"class='{self._class_name}'" if self._class_name else ""
-        img_style = f"width:{self._width}px;height:{self._height}px;"
+        class_str = f"class='{self.class_name}'" if self.class_name else ""
+        img_style = f"width:{self.width}px;height:{self.height}px;"
         tt_style = "position: absolute; top:0; left:0; padding:1px 3px; "
         tt_style += (
             "background: #777; color:#fff; font-size: 90%; font-family:sans-serif; "
@@ -94,7 +87,7 @@ class Snapshot:
         html = f"""
             <div {class_str} style='position:relative;'>
                 <img src='{src}' style='{img_style}' />
-                <div style='{tt_style}'>{self._title}</div>
+                <div style='{tt_style}'>{self.title}</div>
             </div>
             """
         return html.replace("\n", "").replace("    ", "").strip()

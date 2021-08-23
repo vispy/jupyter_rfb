@@ -2,7 +2,6 @@
 from . import events
 from ._version import __version__, version_info
 from .widget import RemoteFrameBuffer
-from ._utils import Snapshot
 
 
 def _jupyter_labextension_paths():

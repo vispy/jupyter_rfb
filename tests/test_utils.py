@@ -1,9 +1,5 @@
 """Test the things in the utils module."""
 
-import os
-import io
-import tempfile
-
 import numpy as np
 from jupyter_rfb._utils import RFBOutputContext, Snapshot
 
@@ -69,20 +65,7 @@ def test_snapshot():
     s = Snapshot(a, 5, 5, "footitle", "KLS")
 
     # The get_array method returns the raw data
-    assert s.get_array() is a
-
-    # You can save the data to file object
-    f = io.BytesIO()
-    s.save(f)
-    bb1 = f.getvalue()
-    assert bb1.startswith(b"\x89PNG")
-
-    # Or to a filename
-    filename = os.path.join(tempfile.gettempdir(), "test.png")
-    s.save(filename)
-    with open(filename, "rb") as f:
-        bb2 = f.read()
-    assert bb1 == bb2
+    assert s.data is a
 
     # Most importantly, it has a Jupyter mime data!
     data = s._repr_mimebundle_()

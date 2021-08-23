@@ -84,18 +84,11 @@ Taking snapshots
 ----------------
 
 In a notebook, the :meth:`.snapshot() <jupyter_rfb.RemoteFrameBuffer.snapshot>`
-method can be used to create a picture
-of the current state of the widget. If the snapshot is displayed (e.g. by
-using it as the cell output) it shows the corresponding image. This image
-remains visible when the notebook is in off-line mode (e.g. in nbviewer).
-
-.. code-block:: py
-
-    >>> w.snapshot()
-
-This functionality can be convenient if you're using a notebook to tell
-a story, and you want to display a certain result that is also visible
-in off-line mode.
+method can be used to create a picture of the current state of the
+widget. This image remains visible when the notebook is in off-line
+mode (e.g. in nbviewer). This functionality can be convenient if you're
+using a notebook to tell a story, and you want to display a certain
+result that is also visible in off-line mode.
 
 When a widget is first displayed, it also automatically creates a
 snapshot, which is hidden by default, but is visible when the
