@@ -9,8 +9,12 @@ This is a list of example notebooks demonstrating the use of jupyter_rfb:
     hello_world.ipynb
     interaction1.ipynb
     interaction2.ipynb
+    ipywidgets_embed.ipynb
     performance.ipynb
     push.ipynb
+    pygfx1.ipynb
+    pygfx2.ipynb
+    pygfx3.ipynb
     video.ipynb
     vispy1.ipynb
     wgpu1.ipynb

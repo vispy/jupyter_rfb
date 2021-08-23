@@ -86,6 +86,22 @@ second. This is to avoid spamming the io and server process. The
 throttling applies to the resize, scroll, and pointer_move events.
 
 
+Taking snapshots
+----------------
+
+In a notebook, the :meth:`.snapshot() <jupyter_rfb.RemoteFrameBuffer.snapshot>`
+method can be used to create a picture of the current state of the
+widget. This image remains visible when the notebook is in off-line
+mode (e.g. in nbviewer). This functionality can be convenient if you're
+using a notebook to tell a story, and you want to display a certain
+result that is also visible in off-line mode.
+
+When a widget is first displayed, it also automatically creates a
+snapshot, which is hidden by default, but is visible when the
+widget itself is not loaded. In other words, example notebooks
+have pretty pictures!
+
+
 Exceptions and logging
 ----------------------
 
@@ -109,7 +125,7 @@ Measuring statistics
 The ``RemoteFrameBuffer`` class has a method ``get_stats()`` that
 returns a dict with performance metrics:
 
-.. code-block::
+.. code-block:: py
 
     >>> w.reset_stats()  # start measuring
         ... interact or run a test

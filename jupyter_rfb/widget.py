@@ -12,9 +12,6 @@ last confirmed frame. As such, if the client processes frames slower,
 the server will slow down too.
 """
 
-import io
-import builtins
-import traceback
 import asyncio
 import time
 from base64 import encodebytes
@@ -25,47 +22,7 @@ from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
 from ._png import array2png
-
-
-_original_print = builtins.print
-
-
-class OutputContext(ipywidgets.Output):
-    """An output widget with a different implementation of the context manager.
-
-    Handles prints and errors in a more reliable way, that is also
-    lightweight (i.e. no peformance cost).
-
-    See https://github.com/vispy/jupyter_rfb/issues/35
-    """
-
-    capture_print = False
-    _prev_print = None
-
-    def print(self, *args, **kwargs):
-        """Print function that show up in the output."""
-        f = io.StringIO()
-        kwargs.pop("file", None)
-        _original_print(*args, file=f, flush=True, **kwargs)
-        text = f.getvalue()
-        self.append_stdout(text)
-
-    def __enter__(self):
-        """Enter context, replace print function."""
-        if self.capture_print:
-            self._prev_print = builtins.print
-            builtins.print = self.print
-        return self
-
-    def __exit__(self, etype, value, tb):
-        """Exit context, restore print function and show any errors."""
-        if self.capture_print and self._prev_print is not None:
-            builtins.print = self._prev_print
-            self._prev_print = None
-        if etype:
-            err = "".join(traceback.format_exception(etype, value, tb))
-            self.append_stderr(err)
-            return True  # declare that we handled the exception
+from ._utils import RFBOutputContext, Snapshot
 
 
 @ipywidgets.register
@@ -113,20 +70,58 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Setup an output widget, so that any prints and errors in our
-        # callbacks are actually shown. We display the output in the cell-output
+        self._ipython_display_ = None  # we use _repr_mimebundle_ instread
+        # Setup an output widget, so that any errors in our callbacks
+        # are actually shown. We display the output in the cell-output
         # corresponding to the cell that instantiates the widget.
-        self._output_context = OutputContext()
+        self._output_context = RFBOutputContext()
         display(self._output_context)
         # Init attributes for drawing
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
         self._rfb_last_confirmed_index = 0
+        self._rfb_last_resize_event = None
         # Init stats
         self.reset_stats()
         # Setup events
         self.on_msg(self._rfb_handle_msg)
         self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
+
+    def _repr_mimebundle_(self, **kwargs):
+        data = {}
+
+        # Always add plain text
+        plaintext = repr(self)
+        if len(plaintext) > 110:
+            plaintext = plaintext[:110] + "…"
+        data["text/plain"] = plaintext
+
+        # Get the actual representation
+        try:
+            data.update(super()._repr_mimebundle_(**kwargs))
+        except Exception:
+            # On 7.6.3 and below, _ipython_display_ is used instead of _repr_mimebundle_.
+            # We fill in the widget representation that has been in use for 5+ years.
+            data["application/vnd.jupyter.widget-view+json"] = {
+                "version_major": 2,
+                "version_minor": 0,
+                "model_id": self._model_id,
+            }
+
+        # Add initial snapshot. It would be awesome if, when the
+        # notebook is offline, this representation is used instead of
+        # application/vnd.jupyter.widget-view+json. And in fact, Gihub's
+        # renderer does this. Unfortunately, nbconvert still selects
+        # the widget mimetype.
+        # So instead, we display() the snapshot right in front of the
+        # actual widget view, and when the widget view is created, it
+        # hides the snapshot. Ha! That way, the snapshot is
+        # automatically shown when the widget is not loaded!
+        if self._view_name is not None:
+            # data["text/html"] = self.snapshot()._get_html()
+            display(self.snapshot(None, _initial=True))
+
+        return data
 
     def print(self, *args, **kwargs):
         """Print to the widget's output area (For debugging purposes).
@@ -150,11 +145,57 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
             if content["event_type"] == "resize":
+                self._rfb_last_resize_event = content
                 self.request_draw()
+            elif content["event_type"] == "close":
+                self._repr_mimebundle_ = None
             with self._output_context:
                 self.handle_event(content)
 
     # ---- drawing
+
+    def snapshot(self, pixel_ratio=None, _initial=False):
+        """Create a snapshot of the current state of the widget.
+
+        Returns an ``IPython DisplayObject`` that can simply be used as
+        a cell output. May also return None if ``get_frame()`` produces
+        None. The display object has a ``data`` attribute that holds
+        the image array data (typically a numpy array).
+        """
+        # Start with a resize event to the appropriate pixel ratio
+        ref_resize_event = self._rfb_last_resize_event
+        if ref_resize_event:
+            w = ref_resize_event["width"]
+            h = ref_resize_event["height"]
+        else:
+            pixel_ratio = pixel_ratio or 1
+            css_width, css_height = self.css_width, self.css_height
+            w = float(css_width[:-2]) if css_width.endswith("px") else 500
+            h = float(css_height[:-2]) if css_height.endswith("px") else 300
+        if pixel_ratio:
+            evt = {
+                "event_type": "resize",
+                "width": w,
+                "height": h,
+                "pixel_ratio": pixel_ratio,
+            }
+            self.handle_event(evt)
+        # Render a frame
+        array = self.get_frame()
+        # Reset pixel ratio
+        if ref_resize_event and pixel_ratio:
+            self.handle_event(ref_resize_event)
+        # Create snapshot object
+        if array is None:
+            return None
+        elif _initial:
+            title = "initial snapshot"
+            class_name = "initial-snapshot-" + self._model_id
+        else:
+            title = "snapshot"
+            class_name = "snapshot-" + self._model_id
+
+        return Snapshot(array, w, h, title, class_name)
 
     def request_draw(self):
         """Schedule a new draw when the widget is ready for it.

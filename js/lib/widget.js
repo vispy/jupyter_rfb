@@ -133,6 +133,11 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
     // Defines how the widget gets rendered into the DOM
     render: function () {
         var that = this;
+        
+        // Hide initial snapshot
+        for (let el of document.getElementsByClassName("initial-snapshot-" + this.model.model_id)) {
+            el.style.display = "none";
+        }
 
         // Create a stub element that can grab focus
         this.focus_el = document.createElement("a");
