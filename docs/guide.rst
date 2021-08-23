@@ -83,7 +83,8 @@ throttling applies to the resize, scroll, and pointer_move events.
 Taking snapshots
 ----------------
 
-In a notebook, the ``.snapshot()`` method can be used to create a picture
+In a notebook, the :meth:`.snapshot() <jupyter_rfb.RemoteFrameBuffer.snapshot>`
+method can be used to create a picture
 of the current state of the widget. If the snapshot is displayed (e.g. by
 using it as the cell output) it shows the corresponding image. This image
 remains visible when the notebook is in off-line mode (e.g. in nbviewer).
