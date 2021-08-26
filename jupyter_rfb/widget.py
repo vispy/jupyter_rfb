@@ -158,8 +158,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         """Create a snapshot of the current state of the widget.
 
         Returns an ``IPython DisplayObject`` that can simply be used as
-        a cell output. May also return None if ``get_frame()`` produces
-        None. The display object has a ``data`` attribute that holds
+        a cell output. The display object has a ``data`` attribute that holds
         the image array data (typically a numpy array).
         """
         # Start with a resize event to the appropriate pixel ratio
@@ -187,8 +186,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
             self.handle_event(ref_resize_event)
         # Create snapshot object
         if array is None:
-            return None
-        elif _initial:
+            array = np.ones((1, 1), np.uint8) * 127
+        if _initial:
             title = "initial snapshot"
             class_name = "initial-snapshot-" + self._model_id
         else:
