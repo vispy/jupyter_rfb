@@ -3,7 +3,7 @@
 Remote Frame Buffer for Jupyter
 
 [![PyPI version](https://badge.fury.io/py/jupyter-rfb.svg)](https://badge.fury.io/py/jupyter-rfb)
-![CI](https://github.com/vispy/jupyter_rfb/actions/workflows/ci.yml/badge.svg) 
+[![CI](https://github.com/vispy/jupyter_rfb/actions/workflows/ci.yml/badge.svg)](https://github.com/vispy/jupyter_rfb/actions)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb).
 
 ## Introduction
