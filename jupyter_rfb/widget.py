@@ -27,16 +27,16 @@ from ._utils import RFBOutputContext, Snapshot
 
 @ipywidgets.register
 class RemoteFrameBuffer(ipywidgets.DOMWidget):
-    """A widget that shows a remote frame buffer.
+    """A widget implementing a remote frame buffer.
 
-    Subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
-    To use this class, it should be subclassed, and its ``get_frame()``
-    and ``handle_event()`` methods should be implemented.
+    This is a subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
+    To use this class, it should be subclassed, and its ``.get_frame()``
+    and ``.handle_event()`` methods should be implemented.
 
     This widget has the following traits:
 
-    * *css_width*: the logical width of the frame as a CSS string. Default '100%'.
-    * *css_height*: the logical height of the frame as a CSS string. Default '300xp'.
+    * *css_width*: the logical width of the frame as a CSS string. Default '500px'.
+    * *css_height*: the logical height of the frame as a CSS string. Default '300px'.
     * *resizable*: whether the frame can be manually resized. Default True.
     * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
       i.e. sent, but not yet confirmed by the client. Default 2. Higher values
@@ -124,11 +124,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         return data
 
     def print(self, *args, **kwargs):
-        """Print to the widget's output area (For debugging purposes).
+        """Print to the widget's output area (for debugging purposes).
 
         In Jupyter, print calls that occur in a callback or an asyncio task
         may (depending on your version of the notebook/lab) not be shown.
-        Inside ``get_frame()`` and ``handle_event()`` you can use this method
+        Inside ``.get_frame()`` and ``.handle_event()`` you can use this method
         instead. The signature of this method is fully compatible with
         the builtin print function (except for the ``file`` argument).
         """
@@ -160,6 +160,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         Returns an ``IPython DisplayObject`` that can simply be used as
         a cell output. The display object has a ``data`` attribute that holds
         the image array data (typically a numpy array).
+
+        The ``pixel_ratio`` can optionally be set to influence the resolution.
+        By default the widgets' "native" pixel-ratio is used.
         """
         # Start with a resize event to the appropriate pixel ratio
         ref_resize_event = self._rfb_last_resize_event
@@ -197,11 +200,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         return Snapshot(array, w, h, title, class_name)
 
     def request_draw(self):
-        """Schedule a new draw when the widget is ready for it.
+        """Schedule a new draw. This method itself returns immediately.
 
-        During a draw, the ``get_frame()`` method is called, and the resulting
-        array is sent to the client. This method is automatically called
-        on each resize event.
+        This method is automatically called on each resize event. During
+        a draw, the ``.get_frame()`` method is called, and the resulting
+        array is sent to the client. See the docs for details about scheduling.
         """
         # Technically, _maybe_draw() may not perform a draw if there are too
         # many frames in-flight. But in this case, we'll eventually get
@@ -282,7 +285,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         Stats is a dict with the following fields:
 
         * *sent_frames*: the number of frames sent.
-        * *confirmed_frames*: number of frames confirmed to be reveived by the client.
+        * *confirmed_frames*: number of frames confirmed by the client.
         * *roundtrip*: avererage time for processing a frame, including receiver confirmation.
         * *delivery*: average time for processing a frame until it's received by the client.
           This measure assumes that the clock of the server and client are precisely synced.

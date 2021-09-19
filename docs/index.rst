@@ -11,7 +11,7 @@ a *remote frame buffer*.
   :alt: Remote Frame Buffer explained
 
 Images that are generated at the server are streamed to the client
-(Jupyter) where they are shown. Evens (such as mouse interactions) are
+(Jupyter) where they are shown. Events (such as mouse interactions) are
 streamed in the other direction, where the server can react by
 generating new images.
 

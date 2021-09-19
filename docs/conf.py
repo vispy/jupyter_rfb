@@ -42,7 +42,14 @@ def insert_examples():
         f.write("\n".join(lines).encode())
 
 
+def other_doc_tweaks():
+    """Tweak some docstrings to make them more suited for the html docs."""
+    m = jupyter_rfb.RemoteFrameBuffer.handle_event
+    m.__doc__ = m.__doc__.replace("the docs of ``jupyter_rfb.events``", "below")
+
+
 insert_examples()
+other_doc_tweaks()
 
 
 # -- Project information -----------------------------------------------------
