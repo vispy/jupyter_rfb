@@ -144,11 +144,13 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
+            # We have some builtin handling
             if content["event_type"] == "resize":
                 self._rfb_last_resize_event = content
                 self.request_draw()
             elif content["event_type"] == "close":
                 self._repr_mimebundle_ = None
+            # Let the subclass handle the event
             with self._output_context:
                 self.handle_event(content)
 
@@ -164,28 +166,34 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         The ``pixel_ratio`` can optionally be set to influence the resolution.
         By default the widgets' "native" pixel-ratio is used.
         """
-        # Start with a resize event to the appropriate pixel ratio
+        # Get the current size
         ref_resize_event = self._rfb_last_resize_event
+        new_pixel_ratio = None
         if ref_resize_event:
+            # We know the size from the last resize event
             w = ref_resize_event["width"]
             h = ref_resize_event["height"]
+            if pixel_ratio and pixel_ratio != ref_resize_event["pixel_ratio"]:
+                new_pixel_ratio = pixel_ratio
         else:
-            pixel_ratio = pixel_ratio or 1
+            # There has not been a resize event yet -> guess the size from our traits
+            new_pixel_ratio = pixel_ratio or 1
             css_width, css_height = self.css_width, self.css_height
             w = float(css_width[:-2]) if css_width.endswith("px") else 500
             h = float(css_height[:-2]) if css_height.endswith("px") else 300
-        if pixel_ratio:
+        # If the new pixel ratio is different from "native", we need to resize first
+        if new_pixel_ratio:
             evt = {
                 "event_type": "resize",
                 "width": w,
                 "height": h,
-                "pixel_ratio": pixel_ratio,
+                "pixel_ratio": new_pixel_ratio,
             }
             self.handle_event(evt)
         # Render a frame
         array = self.get_frame()
         # Reset pixel ratio
-        if ref_resize_event and pixel_ratio:
+        if new_pixel_ratio and ref_resize_event:
             self.handle_event(ref_resize_event)
         # Create snapshot object
         if array is None:
@@ -196,7 +204,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         else:
             title = "snapshot"
             class_name = "snapshot-" + self._model_id
-
         return Snapshot(array, w, h, title, class_name)
 
     def request_draw(self):
