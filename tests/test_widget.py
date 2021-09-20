@@ -265,7 +265,7 @@ def test_has_visible_views():
     fs.frame_feedback["localtime"] = time.time()
 
     fs.has_visible_views = False
-    for i in range(3):
+    for _ in range(3):
         fs.trigger(True)
         assert len(fs.msgs) == 1
 

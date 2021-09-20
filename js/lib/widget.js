@@ -56,7 +56,6 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         };
         // Keep track of whether any objects are shown
         this._intersection_observer = new IntersectionObserver(this._intersection_calback.bind(this));
-        this._visible_view_count = -1;
         // Start the animation loop
         this._img_update_pending = false;
         this._request_animation_frame();
@@ -100,9 +99,9 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
             if (img._is_visible) { count += 1; }
         }
         // If the state changed, update our flag
-        if (count != this._visible_view_count) {
-            this._visible_view_count = count;
-            this.set('has_visible_views', count > 0);
+        let has_visible_views = count > 0; 
+        if (has_visible_views != this.get("has_visible_views")) {
+            this.set('has_visible_views', has_visible_views);
             this.save_changes();
         }
     },

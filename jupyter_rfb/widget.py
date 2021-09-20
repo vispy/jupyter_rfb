@@ -65,11 +65,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
     # Widget specific traits
     frame_feedback = Dict({}).tag(sync=True)
+    has_visible_views = Bool(False).tag(sync=True)
     max_buffered_frames = Int(2, min=1)
     css_width = Unicode("500px").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
-    has_visible_views = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
