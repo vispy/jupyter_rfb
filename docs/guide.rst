@@ -16,8 +16,7 @@ Or to install into a conda environment:
 
     conda install -c conda-forge jupyter-rfb
 
-If you plan to hack on this library, see the
-`contributor's guide <https://github.com/vispy/jupyter_rfb/blob/main/CONTRIBUTING.md>`_
+If you plan to hack on this library, see the :doc:`contributor guide <contributing>`
 for a dev installation and more.
 
 
