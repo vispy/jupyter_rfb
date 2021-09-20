@@ -1,7 +1,8 @@
 """
-Events passed to ``RemoteFrameBuffer.handle_event()`` are dict objects.
-Each dict has a key `event_type`, as well as additional keys to provide
-information regarding the event. The possible event types are:
+Events passed to :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+are dict objects. Each dict has a key `event_type`, as well as
+additional keys to provide information regarding the event. The possible
+event types are:
 
 * **resize**: emitted when the widget changes size.
   This event is throttled.

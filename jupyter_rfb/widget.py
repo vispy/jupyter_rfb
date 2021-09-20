@@ -27,16 +27,18 @@ from ._utils import RFBOutputContext, Snapshot
 
 @ipywidgets.register
 class RemoteFrameBuffer(ipywidgets.DOMWidget):
-    """A widget that shows a remote frame buffer.
+    """A widget implementing a remote frame buffer.
 
-    Subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
-    To use this class, it should be subclassed, and its ``get_frame()``
-    and ``handle_event()`` methods should be implemented.
+    This is a subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
+    To use this class, it should be subclassed, and its
+    :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>` and
+    :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+    methods should be implemented.
 
     This widget has the following traits:
 
-    * *css_width*: the logical width of the frame as a CSS string. Default '100%'.
-    * *css_height*: the logical height of the frame as a CSS string. Default '300xp'.
+    * *css_width*: the logical width of the frame as a CSS string. Default '500px'.
+    * *css_height*: the logical height of the frame as a CSS string. Default '300px'.
     * *resizable*: whether the frame can be manually resized. Default True.
     * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
       i.e. sent, but not yet confirmed by the client. Default 2. Higher values
@@ -124,13 +126,15 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         return data
 
     def print(self, *args, **kwargs):
-        """Print to the widget's output area (For debugging purposes).
+        """Print to the widget's output area (for debugging purposes).
 
         In Jupyter, print calls that occur in a callback or an asyncio task
         may (depending on your version of the notebook/lab) not be shown.
-        Inside ``get_frame()`` and ``handle_event()`` you can use this method
-        instead. The signature of this method is fully compatible with
-        the builtin print function (except for the ``file`` argument).
+        Inside :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+        and :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+        you can use this method instead. The signature of this method
+        is fully compatible with the builtin print function (except for
+        the ``file`` argument).
         """
         self._output_context.print(*args, **kwargs)
 
@@ -144,11 +148,13 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
         if "event_type" in content:
+            # We have some builtin handling
             if content["event_type"] == "resize":
                 self._rfb_last_resize_event = content
                 self.request_draw()
             elif content["event_type"] == "close":
                 self._repr_mimebundle_ = None
+            # Let the subclass handle the event
             with self._output_context:
                 self.handle_event(content)
 
@@ -160,29 +166,38 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         Returns an ``IPython DisplayObject`` that can simply be used as
         a cell output. The display object has a ``data`` attribute that holds
         the image array data (typically a numpy array).
+
+        The ``pixel_ratio`` can optionally be set to influence the resolution.
+        By default the widgets' "native" pixel-ratio is used.
         """
-        # Start with a resize event to the appropriate pixel ratio
+        # Get the current size
         ref_resize_event = self._rfb_last_resize_event
+        new_pixel_ratio = None
         if ref_resize_event:
+            # We know the size from the last resize event
             w = ref_resize_event["width"]
             h = ref_resize_event["height"]
+            if pixel_ratio and pixel_ratio != ref_resize_event["pixel_ratio"]:
+                new_pixel_ratio = pixel_ratio
         else:
-            pixel_ratio = pixel_ratio or 1
+            # There has not been a resize event yet -> guess the size from our traits
+            new_pixel_ratio = pixel_ratio or 1
             css_width, css_height = self.css_width, self.css_height
             w = float(css_width[:-2]) if css_width.endswith("px") else 500
             h = float(css_height[:-2]) if css_height.endswith("px") else 300
-        if pixel_ratio:
+        # If the new pixel ratio is different from "native", we need to resize first
+        if new_pixel_ratio:
             evt = {
                 "event_type": "resize",
                 "width": w,
                 "height": h,
-                "pixel_ratio": pixel_ratio,
+                "pixel_ratio": new_pixel_ratio,
             }
             self.handle_event(evt)
         # Render a frame
         array = self.get_frame()
         # Reset pixel ratio
-        if ref_resize_event and pixel_ratio:
+        if new_pixel_ratio and ref_resize_event:
             self.handle_event(ref_resize_event)
         # Create snapshot object
         if array is None:
@@ -193,15 +208,15 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         else:
             title = "snapshot"
             class_name = "snapshot-" + self._model_id
-
         return Snapshot(array, w, h, title, class_name)
 
     def request_draw(self):
-        """Schedule a new draw when the widget is ready for it.
+        """Schedule a new draw. This method itself returns immediately.
 
-        During a draw, the ``get_frame()`` method is called, and the resulting
-        array is sent to the client. This method is automatically called
-        on each resize event.
+        This method is automatically called on each resize event. During
+        a draw, the :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+        method is called, and the resulting array is sent to the client.
+        See the docs for details about scheduling.
         """
         # Technically, _maybe_draw() may not perform a draw if there are too
         # many frames in-flight. But in this case, we'll eventually get
@@ -277,19 +292,19 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         }
 
     def get_stats(self):
-        """Get the current stats since the last time ``reset_stats()`` was called.
+        """Get the current stats since the last time ``.reset_stats()`` was called.
 
         Stats is a dict with the following fields:
 
         * *sent_frames*: the number of frames sent.
-        * *confirmed_frames*: number of frames confirmed to be reveived by the client.
+        * *confirmed_frames*: number of frames confirmed by the client.
         * *roundtrip*: avererage time for processing a frame, including receiver confirmation.
         * *delivery*: average time for processing a frame until it's received by the client.
           This measure assumes that the clock of the server and client are precisely synced.
         * *img_encoding*: the average time spent on encoding the array into an image.
         * *b64_encoding*: the average time spent on base64 encoding the data.
-        * *fps*: the average FPS, measured from the first frame sent since `reset_stats()`` was
-          called, until the last confirmed frame.
+        * *fps*: the average FPS, measured from the first frame sent since ``.reset_stats()``
+          was called, until the last confirmed frame.
         """
         d = self._rfb_stats
         roundtrip_count_div = d["roundtrip_count"] or 1
@@ -334,6 +349,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
         Subclasses should overload this method. Events include widget resize,
         mouse/touch interaction, key events, and more. An event is a dict with at least
-        the key *event_type*. See the docs of ``jupyter_rfb.events`` for details.
+        the key *event_type*. See :mod:`jupyter_rfb.events` for details.
         """
         pass

@@ -4,16 +4,16 @@ Remote Frame Buffer for Jupyter
 
 [![PyPI version](https://badge.fury.io/py/jupyter-rfb.svg)](https://badge.fury.io/py/jupyter-rfb)
 [![CI](https://github.com/vispy/jupyter_rfb/actions/workflows/ci.yml/badge.svg)](https://github.com/vispy/jupyter_rfb/actions)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb).
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/vispy/jupyter_rfb/main?urlpath=lab/tree/examples/hello_world.ipynb)
 
 ## Introduction
 
 The `jupyter_rfb` library provides a widget (an `ipywidgets` subclass)
-that can be used in the Jupyter notebook and in JupyterLab to realize
+that can be used in the Jupyter notebook and in JupyterLab to implement
 a remote frame-buffer.
 
 Images that are generated at the server are streamed to the client
-(Jupyter) where they are shown. Evens (such as mouse interactions) are
+(Jupyter) where they are shown. Events (such as mouse interactions) are
 streamed in the other direction, where the server can react by
 generating new images.
 
@@ -24,8 +24,10 @@ example visualization created by tools like vispy, datoviz or pygfx.
 
 ## Scope
 
-The above defines the full scope of this library. This makes it easier
-to focus on efficiency, e.g. throttling, image compression, partial updates, etc.
+The above defines the full scope of this library; it's a base widget
+that other libraries can extend for different purposes. Consequently,
+these libraries don't have to each invent a Jupyter widget, and in
+*this* library we can focus on doing that one task really well.
 
 
 ## Installation
