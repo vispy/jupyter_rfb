@@ -30,8 +30,10 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     """A widget implementing a remote frame buffer.
 
     This is a subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
-    To use this class, it should be subclassed, and its ``.get_frame()``
-    and ``.handle_event()`` methods should be implemented.
+    To use this class, it should be subclassed, and its
+    :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>` and
+    :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+    methods should be implemented.
 
     This widget has the following traits:
 
@@ -128,9 +130,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
         In Jupyter, print calls that occur in a callback or an asyncio task
         may (depending on your version of the notebook/lab) not be shown.
-        Inside ``.get_frame()`` and ``.handle_event()`` you can use this method
-        instead. The signature of this method is fully compatible with
-        the builtin print function (except for the ``file`` argument).
+        Inside :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+        and :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+        you can use this method instead. The signature of this method
+        is fully compatible with the builtin print function (except for
+        the ``file`` argument).
         """
         self._output_context.print(*args, **kwargs)
 
@@ -210,8 +214,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         """Schedule a new draw. This method itself returns immediately.
 
         This method is automatically called on each resize event. During
-        a draw, the ``.get_frame()`` method is called, and the resulting
-        array is sent to the client. See the docs for details about scheduling.
+        a draw, the :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+        method is called, and the resulting array is sent to the client.
+        See the docs for details about scheduling.
         """
         # Technically, _maybe_draw() may not perform a draw if there are too
         # many frames in-flight. But in this case, we'll eventually get
@@ -287,7 +292,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         }
 
     def get_stats(self):
-        """Get the current stats since the last time ``reset_stats()`` was called.
+        """Get the current stats since the last time ``.reset_stats()`` was called.
 
         Stats is a dict with the following fields:
 
@@ -298,8 +303,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
           This measure assumes that the clock of the server and client are precisely synced.
         * *img_encoding*: the average time spent on encoding the array into an image.
         * *b64_encoding*: the average time spent on base64 encoding the data.
-        * *fps*: the average FPS, measured from the first frame sent since `reset_stats()`` was
-          called, until the last confirmed frame.
+        * *fps*: the average FPS, measured from the first frame sent since ``.reset_stats()``
+          was called, until the last confirmed frame.
         """
         d = self._rfb_stats
         roundtrip_count_div = d["roundtrip_count"] or 1
@@ -344,6 +349,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
         Subclasses should overload this method. Events include widget resize,
         mouse/touch interaction, key events, and more. An event is a dict with at least
-        the key *event_type*. See the docs of ``jupyter_rfb.events`` for details.
+        the key *event_type*. See :mod:`jupyter_rfb.events` for details.
         """
         pass

@@ -27,7 +27,7 @@ a basis for widgets that want to generate images at the server, and be informed
 of user events. The way to use ``jupyter_rfb`` is therefore to create a subclass
 and implement two specific methods.
 
-The first method to implement is ``.get_frame()``, which should return a uint8 numpy array. For example:
+The first method to implement is :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`, which should return a uint8 numpy array. For example:
 
 .. code-block:: py
 
@@ -36,10 +36,11 @@ The first method to implement is ``.get_frame()``, which should return a uint8 n
         def get_frame(self):
             return np.random.uniform(0, 255, (100,100)).astype(np.uint8)
 
-The second method to implement is ``.handle_event()``, which accepts an
-event object. This is where you can react to changes and user
-interactions. The most important one may be the resize event, so that
-you can match the array size to the region on screen. For example:
+The second method to implement is :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`,
+which accepts an event object. This is where you can react to changes
+and user interactions. The most important one may be the resize event,
+so that you can match the array size to the region on screen. For
+example:
 
 .. code-block:: py
 
@@ -71,20 +72,22 @@ the OS's zoom level.
 Scheduling draws
 ----------------
 
-The ``.get_frame()`` method is called automatically when a new draw is
+The :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+method is called automatically when a new draw is
 performed. There are cases when the widget knows that a redraw is
 (probably) required, such as when the widget is resized.
 
 If you want to trigger a redraw (e.g. because certain state has
 changed in reaction to user interaction), you can call
-``.request_draw()`` to schedule a new draw.
+:func:`.request_draw() <jupyter_rfb.RemoteFrameBuffer.request_draw>` to schedule a new draw.
 
 The scheduling of draws is done in such a way to avoid images being
 produced faster than the client can consume them - a process known as
 throttling. In more detail: the client sends a confirmation for each
 frame that it receives, and the server waits with producing a new frame
 until the client has confirmed receiving the nth latest frame. This
-mechanism causes the calls to ``.get_frame()`` to match the speed by which
+mechanism causes the calls to :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+to match the speed by which
 the frames can be communicated and displayed. This helps minimize the
 lag and optimize the FPS.
 
@@ -118,7 +121,9 @@ have pretty pictures!
 Exceptions and logging
 ----------------------
 
-The ``.handle_event()`` and ``.get_frame()`` methods are called from a Jupyter
+The :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+and :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+methods are called from a Jupyter
 COM event and in an asyncio task, respectively. Under these circumstances,
 Jupyter Lab/Notebook may swallow exceptions as well as writes to stdout/stderr.
 See `issue #35 <https://github.com/vispy/jupyter_rfb/issues/35>`_ for details.
@@ -136,7 +141,8 @@ not become visible anywhere.
 Measuring statistics
 --------------------
 
-The ``RemoteFrameBuffer`` class has a method ``.get_stats()`` that
+The :class:`RemoteFrameBuffer <jupyter_rfb.RemoteFrameBuffer>` class has a
+method :func:`.get_stats() <jupyter_rfb.RemoteFrameBuffer.get_stats>` that
 returns a dict with performance metrics:
 
 .. code-block:: py
