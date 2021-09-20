@@ -22,6 +22,7 @@ class MyRFB(RemoteFrameBuffer):
     def __init__(self):
         super().__init__()
         self.frame_feedback = {}
+        self.has_visible_views = True
         self.msgs = []
 
     def send(self, msg):
@@ -248,6 +249,29 @@ def test_requesting_draws():
     w._rfb_draw_requested = False
     w._rfb_handle_msg(None, {"event_type": "resize"}, [])
     assert w._rfb_draw_requested
+
+
+def test_has_visible_views():
+    """Test that no draws are performed if there are no visible views."""
+
+    fs = MyRFB()
+
+    fs.trigger(True)
+    assert len(fs.msgs) == 1
+
+    # Flush
+    fs.frame_feedback["index"] = 1
+    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
+    fs.frame_feedback["localtime"] = time.time()
+
+    fs.has_visible_views = False
+    for i in range(3):
+        fs.trigger(True)
+        assert len(fs.msgs) == 1
+
+    fs.has_visible_views = True
+    fs.trigger(True)
+    assert len(fs.msgs) == 2
 
 
 def test_automatic_events():
