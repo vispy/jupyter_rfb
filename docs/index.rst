@@ -29,6 +29,7 @@ Contents
    Guide <guide.rst>
    Reference <reference.rst>
    Examples <examples/index.rst>
+   Contributor's guide <contributing.rst>
 
 
 Indices and tables

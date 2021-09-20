@@ -16,7 +16,8 @@ Or to install into a conda environment:
 
     conda install -c conda-forge jupyter-rfb
 
-If you plan to hack on this library, see the `readme <https://github.com/vispy/jupyter_rfb>`_ for a dev installation.
+If you plan to hack on this library, see the :doc:`contributor guide <contributing>`
+for a dev installation and more.
 
 
 Subclassing the widget

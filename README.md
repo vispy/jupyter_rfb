@@ -44,42 +44,10 @@ To install into an existing conda environment:
     $ conda install -c conda-forge jupyter-rfb
 
 
-## Development installation
-
-For a development installation (requires [Node.js](https://nodejs.org) and [Yarn version 1](https://classic.yarnpkg.com/)),
-
-    $ git clone https://github.com/vispy/jupyter_rfb.git
-    $ cd jupyter_rfb
-    $ pip install -e .
-    $ jupyter nbextension install --py --symlink --overwrite --sys-prefix jupyter_rfb
-    $ jupyter nbextension enable --py --sys-prefix jupyter_rfb
-
-When actively developing your extension for JupyterLab, run the command:
-
-    $ jupyter labextension develop --overwrite jupyter_rfb
-
-Then you need to rebuild the JS when you make a code change:
-
-    $ cd js
-    $ yarn run build
-
-You then need to refresh the JupyterLab page when your javascript changes.
-
-
 ## Developer notes
 
-To install developer tools:
-
-    $ pip install pytest black flake8 flake8-docstrings flake8-bugbear
-
-The code is autoformatted with `black .` and linted with `flake8 .`. There is
-a `release.py` to make the release process easy.
-
-Optionally, you can setup an autocommit hook to automatically run these on each commit:
-```
-$ pip install pre-commit
-$ pre-commit install
-```
+See [the contributor guide](https://jupyter-rfb.readthedocs.io/en/latest/contributing.html) on how to install ``jupyter_rfb``
+in a dev environment, and on how to contribute.
 
 
 ## License
