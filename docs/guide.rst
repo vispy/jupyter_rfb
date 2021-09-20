@@ -27,7 +27,7 @@ a basis for widgets that want to generate images at the server, and be informed
 of user events. The way to use ``jupyter_rfb`` is therefore to create a subclass
 and implement two specific methods.
 
-The first method to implement is ``.get_frame()``, which should return an (uint8) numpy array. For example:
+The first method to implement is ``.get_frame()``, which should return a uint8 numpy array. For example:
 
 .. code-block:: py
 
