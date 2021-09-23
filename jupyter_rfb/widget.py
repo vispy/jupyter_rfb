@@ -241,14 +241,15 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         feedback = self.frame_feedback
         # Update stats
         self._rfb_update_stats(feedback)
-        # Determine whether we should perform a draw
+        # Determine whether we should perform a draw: a draw was requested, and
+        # the client is ready for a new frame, and the client widget is visible.
         frames_in_flight = self._rfb_frame_index - feedback.get("index", 0)
         should_draw = (
             self._rfb_draw_requested
             and frames_in_flight < self.max_buffered_frames
             and self.has_visible_views
         )
-        # Then do  the draw, if we should
+        # Do the draw if we should.
         if should_draw:
             self._rfb_draw_requested = False
             with self._output_context:

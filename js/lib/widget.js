@@ -41,21 +41,24 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
     initialize: function () {
         RemoteFrameBufferModel.__super__.initialize.apply(this, arguments);
         window.rfb_model = this; // Debug
-        // Keep a list if img elements. Gets updated when a widget is created, and every 5s.
+        // Keep a list if img elements.
         this.img_elements = [];
+        // Observer that will check whether the img elements are within the viewport.
+        this._intersection_observer = new IntersectionObserver(this._intersection_callback.bind(this));
+        // We update the img element list (and the intersection observer) automatically when
+        // a new view is added or removed. But this (especially the latter) may not work in
+        // all possible cases. So let's also call it on a low interval.
         window.setInterval(this.collect_view_img_elements.bind(this), 5000);
-        // Keep a list of frames to render
+        // Keep a list of frames to render.
         this.frames = [];
-        // We populate the above list from this callback
+        // We populate the above list from this callback.
         this.on('msg:custom', this.on_msg, this);
-        // Initialize a stub frame
+        // Initialize a stub frame.
         this.last_frame = {
             src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mOor68HAAL+AX6E2KOJAAAAAElFTkSuQmCC',
             index: 0,
             timestamp: 0,
         };
-        // Keep track of whether any objects are shown
-        this._intersection_observer = new IntersectionObserver(this._intersection_callback.bind(this));
         // Start the animation loop
         this._img_update_pending = false;
         this._request_animation_frame();
@@ -89,7 +92,10 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
     },
 
     _intersection_callback: function(entries, observer) {
-        // Set visibility of changed img elements
+        // This gets called when one of the views becomes visible/invisible.
+        // Note that entries only contains the *changed* elements.
+        
+        // Set visibility of changed img elements.
         for (let entry of entries) {
             entry.target._is_visible = entry.isIntersecting;
         }
@@ -300,7 +306,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
     remove: function () {
         // This gets called when the view is removed from the DOM. There can still be other views though!
         RemoteFrameBufferView.__super__.remove.apply(this, arguments);
-        window.setTimeout(this.model.collect_view_img_elements.bind(this.model), 100);
+        window.setTimeout(this.model.collect_view_img_elements.bind(this.model), 10);
     },
 
     _check_resize: function () {
