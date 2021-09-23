@@ -55,7 +55,7 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
             timestamp: 0,
         };
         // Keep track of whether any objects are shown
-        this._intersection_observer = new IntersectionObserver(this._intersection_calback.bind(this));
+        this._intersection_observer = new IntersectionObserver(this._intersection_callback.bind(this));
         // Start the animation loop
         this._img_update_pending = false;
         this._request_animation_frame();
@@ -88,7 +88,7 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         }
     },
 
-    _intersection_calback: function(entries, observer) {
+    _intersection_callback: function(entries, observer) {
         // Set visibility of changed img elements
         for (let entry of entries) {
             entry.target._is_visible = entry.isIntersecting;
