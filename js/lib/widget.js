@@ -34,20 +34,26 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         // For the widget
         css_width: '500px',
         css_height: '300px',
-        resizable: true
+        resizable: true,
+        has_visible_views: false
     }),
 
     initialize: function () {
         RemoteFrameBufferModel.__super__.initialize.apply(this, arguments);
         window.rfb_model = this; // Debug
-        // Keep a list if img elements, and auto-refresh it.
+        // Keep a list if img elements.
         this.img_elements = [];
-        window.setInterval(this.resolve_img_elements.bind(this), 1000);
-        // Keep a list of frames to render
+        // Observer that will check whether the img elements are within the viewport.
+        this._intersection_observer = new IntersectionObserver(this._intersection_callback.bind(this));
+        // We update the img element list (and the intersection observer) automatically when
+        // a new view is added or removed. But this (especially the latter) may not work in
+        // all possible cases. So let's also call it on a low interval.
+        window.setInterval(this.collect_view_img_elements.bind(this), 5000);
+        // Keep a list of frames to render.
         this.frames = [];
-        // We populate the above list from this callback
+        // We populate the above list from this callback.
         this.on('msg:custom', this.on_msg, this);
-        // Initialize a stub frame
+        // Initialize a stub frame.
         this.last_frame = {
             src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mOor68HAAL+AX6E2KOJAAAAAElFTkSuQmCC',
             index: 0,
@@ -58,9 +64,11 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         this._request_animation_frame();
     },
 
-    resolve_img_elements: async function () {
+    collect_view_img_elements: async function () {
         // Here we collect img elements corresponding to the current views.
         // We also set their onload methods which we use to schedule new draws.
+        // Plus we reset out visibility obserer.
+        this._intersection_observer.disconnect();
         // Reset
         for (let img of this.img_elements) {
             img.onload = null;
@@ -69,6 +77,7 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         // Collect
         for (let view_id in this.views) {
             let view = await this.views[view_id];
+            this._intersection_observer.observe(view.img);
             this.img_elements.push(view.img);
             view.img.onload = this._request_animation_frame.bind(this);
         }
@@ -79,6 +88,27 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
     on_msg: function (msg, buffers) {
         if (msg.type === 'framebufferdata') {
             this.frames.push(msg);
+        }
+    },
+
+    _intersection_callback: function(entries, observer) {
+        // This gets called when one of the views becomes visible/invisible.
+        // Note that entries only contains the *changed* elements.
+        
+        // Set visibility of changed img elements.
+        for (let entry of entries) {
+            entry.target._is_visible = entry.isIntersecting;
+        }
+        // Now count how many are visible
+        let count = 0;
+        for (let img of this.img_elements) {
+            if (img._is_visible) { count += 1; }
+        }
+        // If the state changed, update our flag
+        let has_visible_views = count > 0; 
+        if (has_visible_views != this.get("has_visible_views")) {
+            this.set('has_visible_views', has_visible_views);
+            this.save_changes();
         }
     },
 
@@ -165,7 +195,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         // Initialize the image
         this.img.src = this.model.last_frame.src;
         this.el.appendChild(this.img);
-        this.model.resolve_img_elements();
+        this.model.collect_view_img_elements();
 
         // Set of throttler functions to send events at a friendly pace
         this._throttlers = {};
@@ -276,6 +306,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
     remove: function () {
         // This gets called when the view is removed from the DOM. There can still be other views though!
         RemoteFrameBufferView.__super__.remove.apply(this, arguments);
+        window.setTimeout(this.model.collect_view_img_elements.bind(this.model), 10);
     },
 
     _check_resize: function () {

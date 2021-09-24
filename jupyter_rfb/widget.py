@@ -65,6 +65,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
     # Widget specific traits
     frame_feedback = Dict({}).tag(sync=True)
+    has_visible_views = Bool(False).tag(sync=True)
     max_buffered_frames = Int(2, min=1)
     css_width = Unicode("500px").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
@@ -87,7 +88,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self.reset_stats()
         # Setup events
         self.on_msg(self._rfb_handle_msg)
-        self.observe(self._rfb_schedule_maybe_draw, names=["frame_feedback"])
+        self.observe(
+            self._rfb_schedule_maybe_draw, names=["frame_feedback", "has_visible_views"]
+        )
 
     def _repr_mimebundle_(self, **kwargs):
         data = {}
@@ -236,9 +239,18 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def _rfb_maybe_draw(self):
         """Perform a draw, if we can and should."""
         feedback = self.frame_feedback
+        # Update stats
         self._rfb_update_stats(feedback)
+        # Determine whether we should perform a draw: a draw was requested, and
+        # the client is ready for a new frame, and the client widget is visible.
         frames_in_flight = self._rfb_frame_index - feedback.get("index", 0)
-        if self._rfb_draw_requested and frames_in_flight < self.max_buffered_frames:
+        should_draw = (
+            self._rfb_draw_requested
+            and frames_in_flight < self.max_buffered_frames
+            and self.has_visible_views
+        )
+        # Do the draw if we should.
+        if should_draw:
             self._rfb_draw_requested = False
             with self._output_context:
                 array = self.get_frame()
