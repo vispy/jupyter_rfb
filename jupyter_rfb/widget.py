@@ -39,6 +39,10 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     * *css_width*: the logical width of the frame as a CSS string. Default '500px'.
     * *css_height*: the logical height of the frame as a CSS string. Default '300px'.
     * *resizable*: whether the frame can be manually resized. Default True.
+    * *quality*: the quality of the JPEG encoding during interaction/animation
+      as a number between 1 and 100. Default 80. Set to lower numbers for more
+      performance on slow connections. Set to 100 for lossless (PNG),
+      but note that each interaction is ended with a lossless image anyway.
     * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
       i.e. sent, but not yet confirmed by the client. Default 2. Higher values
       may result in a higher FPS at the cost of introducing lag.
