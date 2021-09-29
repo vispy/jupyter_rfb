@@ -170,3 +170,6 @@ The framerate that can be obtained depends on a number of factors:
 * When using lossless images (``widget.quality == 100``), the entropy
   (information density) of a frame also matters, because for PNG, high entropy
   data takes longer to compress and results in larger blobs.
+
+For more details about performance considerations in the implementation of ``jupyter_rfb``,
+see `issue #3 <https://github.com/vispy/jupyter_rfb/issues/3>`_.
