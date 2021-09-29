@@ -86,6 +86,9 @@ def test_writing():
     b1_check = array2png(im1.reshape(shape1[0], shape1[1], 1))
     assert b1_check == b1
 
+    # Test noncontiguus data
+    array2png(im3[1:-1, 1:-1, :])
+
 
 def test_writing_failures():
     """Test that errors are raised when needed."""
@@ -101,3 +104,6 @@ def test_writing_failures():
 
     with raises(ValueError):
         array2png(im4.reshape(-1, -1, 8))
+
+    with raises(ValueError):
+        array2png(im4.astype(np.float32))

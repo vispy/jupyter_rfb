@@ -6,7 +6,7 @@ import numpy as np
 
 
 def array2png(array, file=None):
-    """Create a png image from a numpy array.
+    """Create a PNG image from a numpy array.
 
     The written image is in RGB or RGBA format, with 8 bit precision,
     zlib-compressed, without interlacing.
@@ -18,7 +18,7 @@ def array2png(array, file=None):
     # Check types
     if hasattr(array, "shape") and hasattr(array, "dtype"):
         if array.dtype != "uint8":
-            raise TypeError("Image array to convert to PNG must be uint8")
+            raise ValueError("Image array to convert to PNG must be uint8")
         original_shape = shape = array.shape
     else:
         raise ValueError(
