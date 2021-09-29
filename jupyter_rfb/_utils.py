@@ -11,14 +11,16 @@ from ._jpg import array2jpg
 
 
 _original_print = builtins.print
+_warned_png = False
 
 
-def array2compressed(array, quality=90):
+def array2compressed(array, quality=90, logfunc=print):
     """Convert the given image (a numpy array) as a compressed array.
 
     If the quality is 100, a PNG is returned. Otherwise, JPEG is
     preferred and PNG is used as a fallback. Returns (preamble, bytes).
     """
+    global _warned_png
 
     # Drop alpha channel if there is one
     if len(array.shape) == 3 and array.shape[2] == 4:
@@ -33,6 +35,13 @@ def array2compressed(array, quality=90):
         if result is None:
             preamble = "data:image/png;base64,"
             result = array2png(array)
+            # Issue png warning
+            if not _warned_png:
+                _warned_png = True
+                logfunc(
+                    "Warning: No JPEG encoder found, using PNG instead. "
+                    + "Install simplejpeg or pillow for better performance."
+                )
 
     return preamble, result
 

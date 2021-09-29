@@ -21,8 +21,7 @@ import numpy as np
 from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
-from ._png import array2png
-from ._utils import RFBOutputContext, Snapshot
+from ._utils import array2compressed, RFBOutputContext, Snapshot
 
 
 @ipywidgets.register
@@ -67,6 +66,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     frame_feedback = Dict({}).tag(sync=True)
     has_visible_views = Bool(False).tag(sync=True)
     max_buffered_frames = Int(2, min=1)
+    quality = Int(80, min=1, max=100)
     css_width = Unicode("500px").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
@@ -262,12 +262,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_frame_index += 1
         timestamp = time.time()
 
-        # Turn array into a based64-encoded PNG
+        # Turn array into a based64-encoded JPEG or PNG
         t1 = time.perf_counter()
-        png_data = array2png(array)
+        preamble, data = array2compressed(array, self.quality, self.print)
         t2 = time.perf_counter()
-        preamble = "data:image/png;base64,"
-        src = preamble + encodebytes(png_data).decode()
+        src = preamble + encodebytes(data).decode()
         t3 = time.perf_counter()
 
         # Stats
