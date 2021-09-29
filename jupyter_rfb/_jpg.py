@@ -107,7 +107,7 @@ def select_encoder():
     ]:
         try:
             return cls()
-        except Exception:
+        except ImportError:
             continue
     else:
         return StubJpegEncoder()  # if all else fails
