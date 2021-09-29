@@ -244,7 +244,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
                 if (Object.keys(that._pointers).length > 0) { return; }
             }
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_move');
-            that.send_throttled(event, 50);
+            that.send_throttled(event, 20);
         });
 
         // Click events are not pointer events. Not sure if we need click events. It seems to make
@@ -326,7 +326,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         let event_type = msg.event_type || '';
         let func = this._throttlers[event_type];
         if (func === undefined) {
-            func = throttled(this.send, wait || 100);
+            func = throttled(this.send, wait || 50);
             this._throttlers[event_type] = func;
         }
         func.call(this, msg);
