@@ -7,8 +7,34 @@ from IPython.display import DisplayObject
 import ipywidgets
 
 from ._png import array2png
+from ._jpg import array2jpg
+
 
 _original_print = builtins.print
+
+
+def array2compressed(array, quality=90):
+    """Convert the given image (a numpy array) as a compressed array.
+
+    If the quality is 100, a PNG is returned. Otherwise, JPEG is
+    preferred and PNG is used as a fallback. Returns (preamble, bytes).
+    """
+
+    # Drop alpha channel if there is one
+    if len(array.shape) == 3 and array.shape[2] == 4:
+        array = array[:, :, :3]
+
+    if quality >= 100:
+        preamble = "data:image/png;base64,"
+        result = array2png(array)
+    else:
+        preamble = "data:image/jpeg;base64,"
+        result = array2jpg(array, quality)
+        if result is None:
+            preamble = "data:image/png;base64,"
+            result = array2png(array)
+
+    return preamble, result
 
 
 class RFBOutputContext(ipywidgets.Output):

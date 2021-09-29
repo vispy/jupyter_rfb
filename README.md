@@ -36,6 +36,7 @@ To install use pip:
 
     $ pip install jupyter_rfb
 
+For better performance, also ``pip install simplejpeg`` or ``pip install pillow``.
 On older versions of Jupyter notebook/lab an extra step might be needed
 to enable the widget.
 

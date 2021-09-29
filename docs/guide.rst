@@ -16,6 +16,8 @@ Or to install into a conda environment:
 
     conda install -c conda-forge jupyter-rfb
 
+For better performance, also install ``simplejpeg`` or ``pillow``.
+
 If you plan to hack on this library, see the :doc:`contributor guide <contributing>`
 for a dev installation and more.
 
@@ -161,7 +163,10 @@ Performance tips
 
 The framerate that can be obtained depends on a number of factors:
 
-* The size of a frame: larger frames generally take longer to encode.
-* The entropy (information density) of a frame: random data takes longer to compress.
-* How many widgets are drawing simultaneously (they use the same communication channel).
-* How much other work your CPU does (image compression is CPU-bound).
+* The size of a frame: smaller frames generally encode faster and result
+  in smaller blobs, causing less strain on both CPU and IO.
+* How many widgets are drawing simultaneously: they use the same communication channel.
+* The ``widget.quality`` trait: lower quality results in faster encoding and smaller blobs.
+* When using lossless images (``widget.quality == 100``), the entropy
+  (information density) of a frame also matters, because for PNG, high entropy
+  data takes longer to compress and results in larger blobs.
