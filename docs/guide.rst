@@ -16,6 +16,8 @@ Or to install into a conda environment:
 
     conda install -c conda-forge jupyter-rfb
 
+For better performance, also install ``simplejpeg`` or ``pillow``.
+
 If you plan to hack on this library, see the :doc:`contributor guide <contributing>`
 for a dev installation and more.
 
