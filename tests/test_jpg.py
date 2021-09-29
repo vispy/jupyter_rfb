@@ -99,6 +99,11 @@ def _perform_error_checks(encoder):
         encoder.encode(get_random_im(10, 10, 3).astype(np.float32), 90)
 
 
+def raise_importerror():
+    """Raise an import error (flake forces me to write this docstring)."""
+    raise ImportError()
+
+
 def test_select_encoder():
     """Test the JPEG encoder selection mechanism."""
 
@@ -109,8 +114,8 @@ def test_select_encoder():
     simple_init = SimpleJpegEncoder.__init__
     pillow_init = PillowJpegEncoder.__init__
     try:
-        SimpleJpegEncoder.__init__ = lambda self: 1 / 0
-        PillowJpegEncoder.__init__ = lambda self: 1 / 0
+        SimpleJpegEncoder.__init__ = lambda self: raise_importerror()
+        PillowJpegEncoder.__init__ = lambda self: raise_importerror()
 
         encoder = select_encoder()
         assert not isinstance(encoder, (SimpleJpegEncoder, PillowJpegEncoder))

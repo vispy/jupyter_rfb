@@ -41,8 +41,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     * *resizable*: whether the frame can be manually resized. Default True.
     * *quality*: the quality of the JPEG encoding during interaction/animation
       as a number between 1 and 100. Default 80. Set to lower numbers for more
-      performance on slow connections. Set to 100 for lossless (PNG),
-      but note that each interaction is ended with a lossless image anyway.
+      performance on slow connections. Note that each interaction is ended with a
+      lossless image (PNG). If set to 100 or if JPEG encoding isn't possible (missing
+      pillow or simplejpeg dependencies), then lossless PNGs will always be sent.
     * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
       i.e. sent, but not yet confirmed by the client. Default 2. Higher values
       may result in a higher FPS at the cost of introducing lag.

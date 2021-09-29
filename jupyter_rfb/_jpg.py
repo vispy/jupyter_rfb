@@ -1,5 +1,4 @@
 import io
-import importlib
 
 
 class JpegEncoder:
@@ -48,7 +47,9 @@ class SimpleJpegEncoder(JpegEncoder):
     """A JPEG encoder using the simplejpeg library."""
 
     def __init__(self):
-        self.simplejpeg = importlib.import_module("simplejpeg")
+        import simplejpeg
+
+        self.simplejpeg = simplejpeg
 
     def _encode(self, array, quality):
 
@@ -83,7 +84,9 @@ class PillowJpegEncoder(JpegEncoder):
     """A JPEG encoder using the Pillow library."""
 
     def __init__(self):
-        self.pillow = importlib.import_module("PIL.Image")
+        import PIL.Image
+
+        self.pillow = PIL.Image
 
     def _encode(self, array, quality):
 
