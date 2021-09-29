@@ -284,6 +284,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     def _rfb_send_frame(self, array, is_lossless_redraw=False):
         """Actually send a frame over to the client."""
 
+        # For considerations about performance,
+        # see https://github.com/vispy/jupyter_rfb/issues/3
+
         quality = 100 if is_lossless_redraw else self.quality
 
         self._rfb_frame_index += 1
