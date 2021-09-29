@@ -84,6 +84,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_frame_index = 0
         self._rfb_last_confirmed_index = 0
         self._rfb_last_resize_event = None
+        self._rfb_warned_png = False
+        self._rfb_lossless_draw_info = None
         # Init stats
         self.reset_stats()
         # Setup events
@@ -226,6 +228,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # new frame_feedback, which will then trigger a draw.
         if not self._rfb_draw_requested:
             self._rfb_draw_requested = True
+            self._rfb_cancel_lossless_draw()
             self._rfb_schedule_maybe_draw()
 
     def _rfb_schedule_maybe_draw(self, *args):
@@ -257,25 +260,60 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
                 if array is not None:
                     self._rfb_send_frame(array)
 
-    def _rfb_send_frame(self, array):
+    def _rfb_schedule_lossless_draw(self, array, delay=0.3):
+        self._rfb_cancel_lossless_draw()
+        loop = asyncio.get_event_loop()
+        handle = loop.call_later(delay, self._rfb_lossless_draw)
+        self._rfb_lossless_draw_info = array, handle
+
+    def _rfb_cancel_lossless_draw(self):
+        if self._rfb_lossless_draw_info:
+            _, handle = self._rfb_lossless_draw_info
+            self._rfb_lossless_draw_info = None
+            handle.cancel()
+
+    def _rfb_lossless_draw(self):
+        array, _ = self._rfb_lossless_draw_info
+        self._rfb_send_frame(array, True)
+
+    def _rfb_send_frame(self, array, is_lossless_redraw=False):
         """Actually send a frame over to the client."""
+
+        quality = 100 if is_lossless_redraw else self.quality
+
         self._rfb_frame_index += 1
         timestamp = time.time()
 
         # Turn array into a based64-encoded JPEG or PNG
         t1 = time.perf_counter()
-        preamble, data = array2compressed(array, self.quality, self.print)
+        preamble, data = array2compressed(array, quality)
         t2 = time.perf_counter()
         src = preamble + encodebytes(data).decode()
         t3 = time.perf_counter()
 
-        # Stats
-        self._rfb_stats["img_encoding_sum"] += t2 - t1
-        self._rfb_stats["b64_encoding_sum"] += t3 - t2
-        self._rfb_stats["sent_frames"] += 1
-        if self._rfb_stats["start_time"] <= 0:  # Start measuring
-            self._rfb_stats["start_time"] = timestamp
-            self._rfb_last_confirmed_index = self._rfb_frame_index - 1
+        if "jpeg" in preamble:
+            self._rfb_schedule_lossless_draw(array)
+        else:
+            self._rfb_cancel_lossless_draw()
+            # Issue png warning?
+            if quality < 100 and not self._rfb_warned_png:
+                self._rfb_warned_png = True
+                self.print(
+                    "Warning: No JPEG encoder found, using PNG instead. "
+                    + "Install simplejpeg or pillow for better performance."
+                )
+
+        if is_lossless_redraw:
+            # No stats, also not on the confirmation of this frame
+            self._rfb_last_confirmed_index = self._rfb_frame_index
+        else:
+            # Stats
+            self._rfb_stats["img_encoding_sum"] += t2 - t1
+            self._rfb_stats["b64_encoding_sum"] += t3 - t2
+            self._rfb_stats["sent_frames"] += 1
+            if self._rfb_stats["start_time"] <= 0:  # Start measuring
+                self._rfb_stats["start_time"] = timestamp
+                self._rfb_last_confirmed_index = self._rfb_frame_index - 1
 
         # Compose message and send
         msg = dict(
