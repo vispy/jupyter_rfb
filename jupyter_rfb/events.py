@@ -4,6 +4,9 @@ This spec specifies the events that are passed to the widget's
 Events are simple dict objects containing at least the key `event_type`.
 Additional keys provide more information regarding the event.
 
+Note that in jupyter_rfb, the *key_down*, *key_up*, and *wheel* events
+only apply when the widget has focus (having received a pointer down).
+
 The possible event types are:
 
 * **resize**: emitted when the widget changes size.
