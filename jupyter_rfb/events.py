@@ -1,8 +1,13 @@
 """
-Events passed to :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
-are dict objects. Each dict has a key `event_type`, as well as
-additional keys to provide information regarding the event. The possible
-event types are:
+This spec specifies the events that are passed to the widget's
+:func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>` method.
+Events are simple dict objects containing at least the key `event_type`.
+Additional keys provide more information regarding the event.
+
+Note that in jupyter_rfb, the *key_down*, *key_up*, and *wheel* events
+only apply when the widget has focus (having received a pointer down).
+
+The possible event types are:
 
 * **resize**: emitted when the widget changes size.
   This event is throttled.
@@ -38,10 +43,17 @@ event types are:
 * **double_click**: emitted on a double-click.
   This event looks like a pointer event, but without the touches.
 
-* **wheel**: emitted when the mouse-wheel is used (scrolling).
+* **wheel**: emitted when the mouse-wheel is used (scrolling),
+  or when scrolling/pinching on the touchpad/touchscreen.
 
-    * *dx*: the horizontal scroll delta.
-    * *dy*: the vertcal scroll delta.
+  Similar to the JS wheel event, the deltas typically move in steps
+  of 96. Positive values of ``dy`` are associated with scrolling down
+  and zooming out. Positive values of ``dx`` are associated with
+  scrolling to the right. A note for Qt users: the sign of the deltas
+  is reversed compared to the QWheelEvent, and Qt uses steps of 120.
+
+    * *dx*: the horizontal scroll delta (positive means scroll right).
+    * *dy*: the vertical scroll delta (positive means scroll down or zoom out).
     * *x*: the mouse horizontal position during the scroll.
     * *y*: the mouse vertical position during the scroll.
     * *modifiers*: a list of modifier keys being pressed down.

@@ -258,6 +258,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         });
 
         // Scrolling. Need a special throttling that accumulates the deltas.
+        // Also, only consume the wheel event when we have focus.
         this._wheel_state = { dx: 0, dy: 0, e: null, pending: false };
         function send_wheel_event () {
             let e = that._wheel_state.e;
@@ -276,12 +277,13 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             that.send(event);
         }
         this.img.addEventListener('wheel', function (e) {
+            if (window.document.activeElement !== that.focus_el) { return; }
             that._wheel_state.dx += e.deltaX * [1, 16, 600][e.deltaMode];
             that._wheel_state.dy += e.deltaY * [1, 16, 600][e.deltaMode];
             if (!that._wheel_state.pending) {
                 that._wheel_state.pending = true;
                 that._wheel_state.e = e;
-                window.setTimeout(send_wheel_event, 100);
+                window.setTimeout(send_wheel_event, 20);
             }
             if (!e.altKey) { e.preventDefault(); }
         });
