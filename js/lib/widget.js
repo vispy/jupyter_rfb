@@ -181,6 +181,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
 
         // Create image element
         this.img = new Image();
+        this.img.setAttribute("model_id", this.model.model_id);
         // Tweak loading behavior. These should be the defaults, but we set them just in case.
         this.img.decoding = 'sync';
         this.img.loading = 'eager';
@@ -257,6 +258,20 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             if (!e.altKey) { e.preventDefault(); }
         });
 
+        // Apply a trick so we can distinguis between scrolling in or over the widget
+        // Checking (e.target === that.img) does not work for some reason, so we check the .src
+        function check_wheel_target(e) {
+            let now = performance.now();
+            if ((now - window.rfb_wheel_target.t) > 500) {
+                window.rfb_wheel_target.here = (e.target.src === that.img.src);
+            }
+            window.rfb_wheel_target.t = now;
+        }
+        if (!window.rfb_wheel_target) {
+            window.rfb_wheel_target = {t:0, here: false};
+            window.document.addEventListener('wheel', check_wheel_target, 0);
+        }
+
         // Scrolling. Need a special throttling that accumulates the deltas.
         this._wheel_state = { dx: 0, dy: 0, e: null, pending: false };
         function send_wheel_event () {
@@ -276,6 +291,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             that.send(event);
         }
         this.img.addEventListener('wheel', function (e) {
+            if (!window.rfb_wheel_target.here) { return; }
             that._wheel_state.dx += e.deltaX * [1, 16, 600][e.deltaMode];
             that._wheel_state.dy += e.deltaY * [1, 16, 600][e.deltaMode];
             if (!that._wheel_state.pending) {
