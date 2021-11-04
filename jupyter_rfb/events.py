@@ -46,7 +46,7 @@ The possible event types are:
 * **wheel**: emitted when the mouse-wheel is used (scrolling),
   or when scrolling/pinching on the touchpad/touchscreen.
 
-  Following the JS wheel event, the deltas typically move in steps
+  Similar to the JS wheel event, the deltas typically move in steps
   of 96. Positive values of ``dy`` are associated with scrolling down
   and zooming out. Positive values of ``dx`` are associated with
   scrolling to the right. A note for Qt users: the sign of the deltas

@@ -181,7 +181,6 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
 
         // Create image element
         this.img = new Image();
-        this.img.setAttribute("model_id", this.model.model_id);
         // Tweak loading behavior. These should be the defaults, but we set them just in case.
         this.img.decoding = 'sync';
         this.img.loading = 'eager';
