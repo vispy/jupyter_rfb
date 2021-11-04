@@ -281,7 +281,7 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             if (!that._wheel_state.pending) {
                 that._wheel_state.pending = true;
                 that._wheel_state.e = e;
-                window.setTimeout(send_wheel_event, 100);
+                window.setTimeout(send_wheel_event, 20);
             }
             if (!e.altKey) { e.preventDefault(); }
         });
