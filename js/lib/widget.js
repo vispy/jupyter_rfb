@@ -278,8 +278,10 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         }
         this.img.addEventListener('wheel', function (e) {
             if (window.document.activeElement !== that.focus_el) { return; }
-            that._wheel_state.dx += e.deltaX * [1, 16, 600][e.deltaMode];
-            that._wheel_state.dy += e.deltaY * [1, 16, 600][e.deltaMode];
+            let scales = [ 1 / window.devicePixelRatio, 16, 600 ];  // pixel, line, page
+            let scale = scales[e.deltaMode];
+            that._wheel_state.dx += e.deltaX * scale;
+            that._wheel_state.dy += e.deltaY * scale;
             if (!that._wheel_state.pending) {
                 that._wheel_state.pending = true;
                 that._wheel_state.e = e;
