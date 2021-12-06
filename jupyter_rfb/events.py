@@ -108,7 +108,7 @@ Event throttling
 To avoid straining the IO, certain events can be throttled. Their effect
 is accumulated if this makes sense (e.g. wheel event). The consumer of
 the events should take this into account. The events that are throttled
-in jupyte_rfb widgets are resize*, *pointer_move* and *wheel*.
+in jupyte_rfb widgets are *resize*, *pointer_move* and *wheel*.
 
 """
 
