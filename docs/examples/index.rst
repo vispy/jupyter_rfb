@@ -16,5 +16,6 @@ This is a list of example notebooks demonstrating the use of jupyter_rfb:
     pygfx2.ipynb
     pygfx3.ipynb
     video.ipynb
+    visibility_check.ipynb
     vispy1.ipynb
     wgpu1.ipynb
