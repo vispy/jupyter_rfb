@@ -30,16 +30,6 @@ def insert_examples():
     # Copy fresh examples over
     for fname in examples_names:
         shutil.copy(os.path.join(dir1, fname), os.path.join(dir2, fname))
-    # Create index
-    with open(os.path.join(dir2, "index.rst"), "rb") as f:
-        lines = f.read().decode().splitlines()
-    lines = [line for line in lines if not line.strip().endswith(".ipynb")]
-    lines = "\n".join(lines).strip().splitlines()
-    lines.append("")
-    lines.extend(["    " + fname for fname in examples_names])
-    lines.append("")
-    with open(os.path.join(dir2, "index.rst"), "wb") as f:
-        f.write("\n".join(lines).encode())
 
 
 insert_examples()
