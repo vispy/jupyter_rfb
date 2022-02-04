@@ -43,11 +43,18 @@ Event types
 * **wheel**: emitted when the mouse-wheel is used (scrolling),
   or when scrolling/pinching on the touchpad/touchscreen.
 
-  Similar to the JS wheel event, one "wheel action" results in a
-  cumulative ``dy`` of about 100. Positive values of ``dy`` are associated
-  with scrolling down and zooming out. Positive values of ``dx`` are
-  associated with scrolling to the right. A note for Qt users: the sign
-  of the deltas is (usually) reversed compared to the QWheelEvent.
+  Similar to the JS wheel event, the values of the deltas depend on the
+  platform and whether the mouse-wheel, trackpad or a touch-gesture is
+  used. Also, scrolling can be linear or have inertia. As a rule of
+  thumb, one "wheel action" results in a cumulative ``dy`` of around
+  100. Positive values of ``dy`` are associated with scrolling down and
+  zooming out. Positive values of ``dx`` are associated with scrolling
+  to the right. (A note for Qt users: the sign of the deltas is (usually)
+  reversed compared to the QWheelEvent.)
+
+  On MacOS, using the mouse-wheel while holding shift results in horizontal
+  scrolling. In applications where the scroll dimension does not matter,
+  it is therefore recommended to use `delta = event['dy'] or event['dx']`.
 
     * *dx*: the horizontal scroll delta (positive means scroll right).
     * *dy*: the vertical scroll delta (positive means scroll down or zoom out).
