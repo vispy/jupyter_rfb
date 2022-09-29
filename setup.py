@@ -58,7 +58,7 @@ setup_args = dict(
     install_requires=[
         "numpy",
         "ipywidgets>=7.6.0,<8.0.0",
-        "jupyterlab-widgets==1.1.1",
+        "jupyterlab-widgets<=1.1.1",
     ],
     python_requires=">=3.6",
     packages=find_packages(),
