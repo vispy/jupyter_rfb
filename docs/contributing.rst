@@ -51,6 +51,12 @@ Install developer tools
 
     $ pip install pytest black flake8 flake8-docstrings flake8-bugbear
 
+Install dependencies required for tests
+---------------------------------------
+
+.. code-block::
+
+   $ pip install pillow simplejpeg
 
 Automated tools
 ---------------
