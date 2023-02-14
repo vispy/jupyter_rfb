@@ -40,7 +40,6 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
     }
     initialize() {
         RemoteFrameBufferModel.__super__.initialize.apply(this, arguments);
-        window.rfb_model = this; // Debug
         // Keep a list if img elements.
         this.img_elements = [];
         // Observer that will check whether the img elements are within the viewport.
