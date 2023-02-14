@@ -6,7 +6,7 @@
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jupyter_rfb/jupyter_rfb.git"
+    "url": "https://github.com/vispy/jupyter_rfb.git"
   },
   "keywords": [
     "jupyter",
