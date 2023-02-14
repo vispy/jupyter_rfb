@@ -52,7 +52,6 @@ class SimpleJpegEncoder(JpegEncoder):
         self.simplejpeg = simplejpeg
 
     def _encode(self, array, quality):
-
         # Simplejpeg requires contiguous data
         if not array.flags.c_contiguous:
             array = array.copy()
@@ -89,7 +88,6 @@ class PillowJpegEncoder(JpegEncoder):
         self.pillow = PIL.Image
 
     def _encode(self, array, quality):
-
         # Pillow likes grayscale as an NxM array (not NxMx1)
         if len(array.shape) == 3 and array.shape[2] == 1:
             array = array.reshape(array.shape[:-1])
