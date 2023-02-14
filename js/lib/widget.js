@@ -39,7 +39,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         };
     }
     initialize() {
-        RemoteFrameBufferModel.__super__.initialize.apply(this, arguments);
+        super.initialize.apply(this, arguments);
         // Keep a list if img elements.
         this.img_elements = [];
         // Observer that will check whether the img elements are within the viewport.
@@ -153,7 +153,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
     close() {
         // This gets called when model is closed and the comm is removed. Notify Py just in time!
         this.send({ event_type: 'close' }); // does nothing if this.comm is already gone
-        RemoteFrameBufferModel.__super__.close.apply(this, arguments);
+        super.close.apply(this, arguments);
     }
 }
 
