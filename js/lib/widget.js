@@ -308,7 +308,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
 
     remove() {
         // This gets called when the view is removed from the DOM. There can still be other views though!
-        RemoteFrameBufferView.__super__.remove.apply(this, arguments);
+        super.remove.apply(this, arguments);
         window.setTimeout(this.model.collect_view_img_elements.bind(this.model), 10);
     }
 
