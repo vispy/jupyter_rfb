@@ -46,7 +46,6 @@ def test_array2compressed():
     # Check fallback - disable JPEG encoding, we get PNG
     _jpg.encoder = _jpg.StubJpegEncoder()
     try:
-
         preamble, bb = array2compressed(im)
         assert isinstance(preamble, str)
         assert isinstance(bb, bytes)
