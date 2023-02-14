@@ -41,7 +41,6 @@ def test_pillow_jpeg_encoder():
 
 
 def _perform_checks(encoder):
-
     # RGB
     im = get_random_im(100, 100, 3)
     bb1 = encoder.encode(im, 90)
@@ -79,7 +78,6 @@ def _perform_checks(encoder):
 
 
 def _perform_error_checks(encoder):
-
     # JUst to verify that this is ok
     encoder.encode(get_random_im(10, 10, 3), 90)
 
