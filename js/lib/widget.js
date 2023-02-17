@@ -1,5 +1,4 @@
-var widgets = require('@jupyter-widgets/base');
-var _ = require('lodash');
+import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base';
 
 /*
  * For the kernel counterpart to this file, see widget.py
@@ -20,27 +19,27 @@ var _ = require('lodash');
  */
 
 
-var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
-    defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
-        // Meta info
-        _model_name: 'RemoteFrameBufferModel',
-        _view_name: 'RemoteFrameBufferView',
-        _model_module: 'jupyter_rfb',
-        _view_module: 'jupyter_rfb',
-        _model_module_version: '0.1.0',
-        _view_module_version: '0.1.0',
-        // For the frames
-        frame_feedback: {},
-        // For the widget
-        css_width: '500px',
-        css_height: '300px',
-        resizable: true,
-        has_visible_views: false
-    }),
-
-    initialize: function () {
-        RemoteFrameBufferModel.__super__.initialize.apply(this, arguments);
-        window.rfb_model = this; // Debug
+export class RemoteFrameBufferModel extends DOMWidgetModel {
+    defaults() {
+        return {
+          ...super.defaults(),
+            _model_name: 'RemoteFrameBufferModel',
+            _view_name: 'RemoteFrameBufferView',
+            _model_module: 'jupyter_rfb',
+            _view_module: 'jupyter_rfb',
+            _model_module_version: '0.1.0',
+            _view_module_version: '0.1.0',
+            // For the frames
+            frame_feedback: {},
+            // For the widget
+            css_width: '500px',
+            css_height: '300px',
+            resizable: true,
+            has_visible_views: false
+        };
+    }
+    initialize() {
+        super.initialize.apply(this, arguments);
         // Keep a list if img elements.
         this.img_elements = [];
         // Observer that will check whether the img elements are within the viewport.
@@ -62,9 +61,9 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         // Start the animation loop
         this._img_update_pending = false;
         this._request_animation_frame();
-    },
+    }
 
-    collect_view_img_elements: async function () {
+    async collect_view_img_elements () {
         // Here we collect img elements corresponding to the current views.
         // We also set their onload methods which we use to schedule new draws.
         // Plus we reset out visibility obserer.
@@ -83,15 +82,15 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         }
         // Just in case we lose the animation loop somehow because of images dropping out.
         this._request_animation_frame();
-    },
+    }
 
-    on_msg: function (msg, buffers) {
+    on_msg(msg, buffers) {
         if (msg.type === 'framebufferdata') {
             this.frames.push(msg);
         }
-    },
+    }
 
-    _intersection_callback: function(entries, observer) {
+    _intersection_callback(entries, observer) {
         // This gets called when one of the views becomes visible/invisible.
         // Note that entries only contains the *changed* elements.
         
@@ -110,17 +109,17 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
             this.set('has_visible_views', has_visible_views);
             this.save_changes();
         }
-    },
+    }
 
-    _send_response: function () {
+    _send_response() {
         // Let Python know what we have at the model. This prop is a dict, making it "atomic".
         let frame = this.last_frame;
         let frame_feedback = { index: frame.index, timestamp: frame.timestamp, localtime: Date.now() / 1000 };
         this.set('frame_feedback', frame_feedback);
         this.save_changes();
-    },
+    }
 
-    _request_animation_frame: function () {
+    _request_animation_frame () {
         // Request an animation frame, but with a tiny delay, just to avoid
         // straining the browser. This seems to actually make things more smooth.
         if (!this._img_update_pending) {
@@ -128,9 +127,9 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
             let func = this._animate.bind(this);
             window.setTimeout(window.requestAnimationFrame, 5, func);
         }
-    },
+    }
 
-    _animate: function () {
+    _animate() {
         this._img_update_pending = false;
         if (!this.frames.length) {
             this._request_animation_frame();
@@ -149,19 +148,19 @@ var RemoteFrameBufferModel = widgets.DOMWidgetModel.extend({
         if (this.img_elements.length === 0) {
             this._request_animation_frame();
         }
-    },
+    }
 
-    close: function () {
+    close() {
         // This gets called when model is closed and the comm is removed. Notify Py just in time!
         this.send({ event_type: 'close' }); // does nothing if this.comm is already gone
-        RemoteFrameBufferModel.__super__.close.apply(this, arguments);
-    },
-});
+        super.close.apply(this, arguments);
+    }
+}
 
 
-var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
+export class RemoteFrameBufferView extends DOMWidgetView {
     // Defines how the widget gets rendered into the DOM
-    render: function () {
+    render() {
         var that = this;
         
         // Hide initial snapshot
@@ -305,15 +304,15 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
         }
         this.focus_el.addEventListener('keydown', key_event_handler, true);
         this.focus_el.addEventListener('keyup', key_event_handler, true);
-    },
+    }
 
-    remove: function () {
+    remove() {
         // This gets called when the view is removed from the DOM. There can still be other views though!
-        RemoteFrameBufferView.__super__.remove.apply(this, arguments);
+        super.remove.apply(this, arguments);
         window.setTimeout(this.model.collect_view_img_elements.bind(this.model), 10);
-    },
+    }
 
-    _check_resize: function () {
+    _check_resize() {
         // Called when the widget resizes. Width and height are in logical pixels.
         let w = this.img.clientWidth;
         let h = this.img.clientHeight;
@@ -323,9 +322,9 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             this._current_size = [w, h, r];
             this.send_throttled({ event_type: 'resize', width: w, height: h, pixel_ratio: r }, 200);
         }
-    },
+    }
 
-    send_throttled: function (msg, wait) {
+    send_throttled (msg, wait) {
         // Like .send(), but throttled
         let event_type = msg.event_type || '';
         let func = this._throttlers[event_type];
@@ -334,9 +333,9 @@ var RemoteFrameBufferView = widgets.DOMWidgetView.extend({
             this._throttlers[event_type] = func;
         }
         func.call(this, msg);
-    },
+    }
+}
 
-});
 
 
 var KEYMAP = {
@@ -414,9 +413,3 @@ function create_pointer_event (el, e, pointers, event_type) {
         touches: touches,
     };
 }
-
-
-module.exports = {
-    RemoteFrameBufferModel: RemoteFrameBufferModel,
-    RemoteFrameBufferView: RemoteFrameBufferView
-};

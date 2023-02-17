@@ -57,10 +57,10 @@ setup_args = dict(
     include_package_data=True,
     install_requires=[
         "numpy",
-        "ipywidgets>=7.6.0,<8.0.0",
-        "jupyterlab-widgets<=1.1.1",
+        "ipywidgets>=7.6.0,<9",
+        "jupyterlab-widgets",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     packages=find_packages(),
     zip_safe=False,
     cmdclass=cmdclass,
@@ -81,10 +81,11 @@ setup_args = dict(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Topic :: Multimedia :: Graphics",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )
 

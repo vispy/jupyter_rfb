@@ -1,16 +1,17 @@
-var plugin = require('./index');
-var base = require('@jupyter-widgets/base');
+import {RemoteFrameBufferModel, RemoteFrameBufferView, version} from './index';
+import {IJupyterWidgetRegistry} from '@jupyter-widgets/base';
 
-module.exports = {
+export const remoteFrameBufferPlugin = {
   id: 'jupyter_rfb:plugin',
-  requires: [base.IJupyterWidgetRegistry],
+  requires: [IJupyterWidgetRegistry],
   activate: function(app, widgets) {
       widgets.registerWidget({
           name: 'jupyter_rfb',
-          version: plugin.version,
-          exports: plugin
+          version: version,
+          exports: { RemoteFrameBufferModel, RemoteFrameBufferView }
       });
   },
   autoStart: true
 };
 
+export default remoteFrameBufferPlugin;
