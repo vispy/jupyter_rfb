@@ -30,13 +30,11 @@ def insert_examples():
     # Copy fresh examples over
     for fname in examples_names:
         # shutil.copy(os.path.join(dir1, fname), os.path.join(dir2, fname))
-        with open(os.path.join(dir1, fname), 'rb') as f:
+        with open(os.path.join(dir1, fname), "rb") as f:
             d = json.loads(f.read().decode())
         jupyter_rfb.remove_rfb_models_from_nb(d)
-        with open(os.path.join(dir2, fname), 'wb') as f:
+        with open(os.path.join(dir2, fname), "wb") as f:
             f.write(json.dumps(d, indent=2).encode())
-
-
 
 
 insert_examples()
