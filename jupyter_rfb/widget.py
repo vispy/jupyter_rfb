@@ -120,18 +120,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
                 "model_id": self._model_id,
             }
 
-        # Add initial snapshot. It would be awesome if, when the
-        # notebook is offline, this representation is used instead of
-        # application/vnd.jupyter.widget-view+json. And in fact, Gihub's
-        # renderer does this. Unfortunately, nbconvert still selects
-        # the widget mimetype.
-        # So instead, we display() the snapshot right in front of the
-        # actual widget view, and when the widget view is created, it
-        # hides the snapshot. Ha! That way, the snapshot is
-        # automatically shown when the widget is not loaded!
+        # Add initial snapshot.
         if self._view_name is not None:
-            # data["text/html"] = self.snapshot()._get_html()
-            display(self.snapshot(None, _initial=True))
+            data["text/html"] = self.snapshot()._repr_html_()
 
         return data
 
