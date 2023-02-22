@@ -1,8 +1,8 @@
 """Configuration script for Sphinx."""
 
 import os
-import shutil
 import sys
+import json
 
 
 ROOT_DIR = os.path.abspath(os.path.join(__file__, "..", ".."))
@@ -29,7 +29,14 @@ def insert_examples():
             os.remove(os.path.join(dir2, fname))
     # Copy fresh examples over
     for fname in examples_names:
-        shutil.copy(os.path.join(dir1, fname), os.path.join(dir2, fname))
+        # shutil.copy(os.path.join(dir1, fname), os.path.join(dir2, fname))
+        with open(os.path.join(dir1, fname), 'rb') as f:
+            d = json.loads(f.read().decode())
+        jupyter_rfb.remove_rfb_models_from_nb(d)
+        with open(os.path.join(dir2, fname), 'wb') as f:
+            f.write(json.dumps(d, indent=2).encode())
+
+
 
 
 insert_examples()
@@ -38,7 +45,7 @@ insert_examples()
 # -- Project information -----------------------------------------------------
 
 project = "jupyter_rfb"
-copyright = "2021, Almar Klein"
+copyright = "2021-2023, Almar Klein"
 author = "Almar Klein"
 
 

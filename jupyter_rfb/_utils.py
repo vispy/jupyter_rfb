@@ -117,3 +117,32 @@ class Snapshot(DisplayObject):
             </div>
             """
         return html.replace("\n", "").replace("    ", "").strip()
+
+
+def remove_rfb_models_from_nb(d):
+    """Remove the widget model output from a notebook dict.
+
+    Given a notebook as a dict (loaded using json), remove the widget
+    model output if there is also a text/html snapshot output.
+
+    This is to work around the fact that nbsphinx favors the model over
+    the text/html output. Which is sad, because that's where we put the
+    initial screenshot for offline viewing.
+    """
+
+    to_remove = set()
+    for key, val in d.items():
+        if key == "cells" and isinstance(val, list):
+            for v in val:
+                remove_rfb_models_from_nb(v)
+        elif key == "outputs" and isinstance(val, list):
+            for v in val:
+                data = v.get("data", None)
+                if data:
+                    remove_rfb_models_from_nb(data)
+        elif key == "application/vnd.jupyter.widget-view+json":
+            html_sibling = d.get("text/html", [])
+            if html_sibling and "<div class='snapshot-" in html_sibling[0]:
+                to_remove.add(key)
+    for key in to_remove:
+        d.pop(key)
