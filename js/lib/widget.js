@@ -162,11 +162,6 @@ export class RemoteFrameBufferView extends DOMWidgetView {
     // Defines how the widget gets rendered into the DOM
     render() {
         var that = this;
-        
-        // Hide initial snapshot
-        for (let el of document.getElementsByClassName("initial-snapshot-" + this.model.model_id)) {
-            el.style.display = "none";
-        }
 
         // Create a stub element that can grab focus
         this.focus_el = document.createElement("a");
@@ -199,12 +194,13 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         // Set of throttler functions to send events at a friendly pace
         this._throttlers = {};
 
-        // Initialize sizing. Setting the this.el's size right now has no effect for some reason, so we use a timer.
+        // Initialize sizing.
+        // Setting the this.el's size right now has no effect. We also set it in _check_size() below.
         this.img.style.width = '100%';
         this.img.style.height = '100%';
+        this.el.style.width =  this.model.get('css_width');
+        this.el.style.height =  this.model.get('css_height');
         this.el.style.resize = this.model.get('resizable') ? 'both' : 'none';
-        window.setTimeout(() => { this.el.style.width = this.model.get('css_width'); }, 1);
-        window.setTimeout(() => { this.el.style.height = this.model.get('css_height'); }, 1);
 
         // Keep track of size changes from the server
         this.model.on('change:css_width', function () { this.el.style.width = this.model.get('css_width'); }, this);
@@ -313,7 +309,16 @@ export class RemoteFrameBufferView extends DOMWidgetView {
     }
 
     _check_resize() {
-        // Called when the widget resizes. Width and height are in logical pixels.
+        // Called when the widget resizes.
+        // During initialization Jupyter sets .el.style.width and .height to the empty string.
+        // It looks like VS Code tries harder to do this than the notebook,
+        // so we need to check for this pretty aggressively.
+        if (!this.el.style.width && this.model.get('css_width')) {
+            this.el.style.width = this.model.get('css_width');
+            this.el.style.height = this.model.get('css_height');
+            return;  // Don't send a resize event now
+        }
+        // Width and height are in logical pixels.
         let w = this.img.clientWidth;
         let h = this.img.clientHeight;
         let r = window.devicePixelRatio;
