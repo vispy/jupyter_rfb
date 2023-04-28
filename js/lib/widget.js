@@ -317,8 +317,8 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             this.el.style.width = this.model.get('css_width');
             this.el.style.height = this.model.get('css_height');
             // prevent massive size due to auto-scroll (issue #62)
-            this.el.style.maxWidth = "1536x";
-            this.el.style.maxHeight = "1024px";
+            this.el.style.maxWidth = Math.max(1024, window.innerWidth) + 'px';
+            this.el.style.maxHeight = Math.max(1024, window.innerHeight) + 'px';
             return;  // Don't send a resize event now
         }
         // Width and height are in logical pixels.
