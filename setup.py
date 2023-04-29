@@ -60,7 +60,7 @@ setup_args = dict(
         "ipywidgets>=7.6.0,<9",
         "jupyterlab-widgets",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     packages=find_packages(),
     zip_safe=False,
     cmdclass=cmdclass,
