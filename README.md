@@ -47,7 +47,7 @@ To install into an existing conda environment:
 
 ## Developer notes
 
-See [the contributor guide](https://jupyter-rfb.readthedocs.io/en/latest/contributing.html) on how to install ``jupyter_rfb``
+See [the contributor guide](https://jupyter-rfb.readthedocs.io/en/stable/contributing.html) on how to install ``jupyter_rfb``
 in a dev environment, and on how to contribute.
 
 
