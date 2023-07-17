@@ -90,7 +90,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
      */
     on_msg(msg, buffers) {
         if (msg.type === 'framebufferdata') {
-            let blob = new Blob([buffers[0].buffer], { type: "image/jpeg" });
+            let blob = new Blob([buffers[0].buffer], { type: msg.mimetype });
             this.frames.push({
                 ...msg,
                 dataUrl: URL.createObjectURL(blob),
