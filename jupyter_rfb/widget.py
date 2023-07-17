@@ -285,12 +285,10 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
         # Turn array into a based64-encoded JPEG or PNG
         t1 = time.perf_counter()
-        preamble, data = array2compressed(array, quality)
+        mimetype, data = array2compressed(array, quality)
         t2 = time.perf_counter()
-        src = preamble + encodebytes(data).decode()
-        t3 = time.perf_counter()
 
-        if "jpeg" in preamble:
+        if "jpeg" in mimetype:
             self._rfb_schedule_lossless_draw(array)
         else:
             self._rfb_cancel_lossless_draw()
@@ -308,7 +306,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         else:
             # Stats
             self._rfb_stats["img_encoding_sum"] += t2 - t1
-            self._rfb_stats["b64_encoding_sum"] += t3 - t2
             self._rfb_stats["sent_frames"] += 1
             if self._rfb_stats["start_time"] <= 0:  # Start measuring
                 self._rfb_stats["start_time"] = timestamp
@@ -317,11 +314,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Compose message and send
         msg = dict(
             type="framebufferdata",
-            src=src,
+            mimetype=mimetype,
             index=self._rfb_frame_index,
             timestamp=timestamp,
         )
-        self.send(msg)
+        self.send(msg, [data])
 
     # ----- related to stats
 

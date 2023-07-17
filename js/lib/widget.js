@@ -84,9 +84,17 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         this._request_animation_frame();
     }
 
+    /**
+     * @param {Object} msg
+     * @param {DataView[]} buffers
+     */
     on_msg(msg, buffers) {
         if (msg.type === 'framebufferdata') {
-            this.frames.push(msg);
+            let blob = new Blob([buffers[0].buffer], { type: "image/jpeg" });
+            this.frames.push({
+                ...msg,
+                dataUrl: URL.createObjectURL(blob),
+            });
         }
     }
 
@@ -137,9 +145,10 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         }
         // Pick the oldest frame from the stack
         let frame = this.frames.shift();
+        URL.revokeObjectURL(this.img_elements?.[0]?.src);
         // Update the image sources
         for (let img of this.img_elements) {
-            img.src = frame.src;
+            img.src = frame.dataUrl;
         }
         // Let the server know we processed the image (even if it's not shown yet)
         this.last_frame = frame;
