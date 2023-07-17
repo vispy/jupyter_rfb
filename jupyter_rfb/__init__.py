@@ -1,14 +1,8 @@
 # flake8: noqa
 from . import events
 from ._version import __version__, version_info
+from .widget import RemoteFrameBuffer
 from ._utils import remove_rfb_models_from_nb
-
-from ._colab import IN_COLAB
-
-if IN_COLAB:
-    from ._colab import RemoteFrameBuffer
-else:
-    from .widget import RemoteFrameBuffer
 
 
 def _jupyter_labextension_paths():
