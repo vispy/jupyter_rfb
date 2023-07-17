@@ -1,20 +1,22 @@
-from .widget import RemoteFrameBuffer as RFB
-
 try:
+    # determine if running in colab
     from google.colab import output
     from google.colab.output._widgets import _installed_url
 except ModuleNotFoundError:
     IN_COLAB = False
+    COLAB_URL = None
 else:
     IN_COLAB = True
-
+    # useful to enable widget manager here so the user doesn't have to manually
     output.enable_custom_widget_manager()
+    # the metadata that colab needs
     COLAB_URL = _installed_url
 
 
 def get_colab_metadata():
     """
-    Returns metadata required for colab
+    Returns metadata required for colab if running in colab notebook.
+    Returns ``None` if not running in a colab notebook.
     """
     if not IN_COLAB:
         return None
@@ -25,10 +27,3 @@ def get_colab_metadata():
     }
 
     return meta
-
-
-class RemoteFrameBuffer(RFB):
-    def _repr_mimebundle_(self, **kwargs):
-        data = super(RemoteFrameBuffer, self)._repr_mimebundle_(**kwargs)
-
-        return data, get_colab_metadata()

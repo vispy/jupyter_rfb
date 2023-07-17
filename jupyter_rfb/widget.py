@@ -22,6 +22,7 @@ from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
 from ._utils import array2compressed, RFBOutputContext, Snapshot
+from ._colab import get_colab_metadata
 
 
 @ipywidgets.register
@@ -123,6 +124,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Add initial snapshot.
         if self._view_name is not None:
             data["text/html"] = self.snapshot()._repr_html_()
+
+        # attach colab metadata if running in a colab notebook
+        colab_metadata = get_colab_metadata()
+        if colab_metadata is not None:  # ``None`` if not running in colab
+            data = (data, colab_metadata)
 
         return data
 
