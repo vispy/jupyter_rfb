@@ -333,7 +333,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
             "roundtrip_sum": 0,
             "delivery_sum": 0,
             "img_encoding_sum": 0,
-            "b64_encoding_sum": 0,
         }
 
     def get_stats(self):
@@ -361,7 +360,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
             "roundtrip": d["roundtrip_sum"] / roundtrip_count_div,
             "delivery": d["delivery_sum"] / roundtrip_count_div,
             "img_encoding": d["img_encoding_sum"] / sent_frames_div,
-            "b64_encoding": d["b64_encoding_sum"] / sent_frames_div,
             "fps": d["confirmed_frames"] / fps_div,
         }
 
