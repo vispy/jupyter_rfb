@@ -14,7 +14,6 @@ the server will slow down too.
 
 import asyncio
 import time
-from base64 import encodebytes
 
 import ipywidgets
 import numpy as np
