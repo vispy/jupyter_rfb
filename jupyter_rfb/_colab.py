@@ -15,7 +15,9 @@ else:
 
 def get_colab_metadata():
     """
-    Gets metadata required for colab notebooks. Returns ``None` if not running in a colab notebook.
+    Get the metadata required for running in a colab notebook.
+
+    Returns ``None` if not running in a colab notebook.
     """
 
     if not IN_COLAB:
