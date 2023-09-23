@@ -2,7 +2,7 @@ try:
     # determine if running in colab
     from google.colab import output
     from google.colab.output._widgets import _installed_url
-except ModuleNotFoundError:
+except Exception:
     IN_COLAB = False
     COLAB_URL = None
 else:
@@ -15,9 +15,9 @@ else:
 
 def get_colab_metadata():
     """
-    Returns metadata required for colab if running in colab notebook.
-    Returns ``None` if not running in a colab notebook.
+    Gets metadata required for colab notebooks. Returns ``None` if not running in a colab notebook.
     """
+
     if not IN_COLAB:
         return None
 
