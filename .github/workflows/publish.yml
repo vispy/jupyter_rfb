@@ -35,4 +35,4 @@ jobs:
       - name: publish npm
         run: |
           cd js
-          npm publish
+          yarn publish
