@@ -52,7 +52,7 @@ jobs:
           # Other systems / interpreters
           - name: Linux pypy3
             os: ubuntu-latest
-            pyversion: 'pypy3.11'
+            pyversion: 'pypy3.10'
           - name: Windows py311
             os: windows-latest
             pyversion: '3.11'
