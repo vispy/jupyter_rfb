@@ -152,7 +152,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
 
     close() {
         // This gets called when model is closed and the comm is removed. Notify Py just in time!
-        this.send({ event_type: 'close' }); // does nothing if this.comm is already gone
+        this.send({ event_type: 'close', time_stamp: get_time_stamp() }); // does nothing if this.comm is already gone
         super.close.apply(this, arguments);
     }
 }
@@ -268,6 +268,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
                 dy: that._wheel_state.dy,
                 buttons: buttons,
                 modifiers: get_modifiers(e),
+                time_stamp: get_time_stamp(),
             };
             that._wheel_state.dx = 0;
             that._wheel_state.dy = 0;
@@ -296,6 +297,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
                 event_type: 'key_' + e.type.slice(3),
                 key: KEYMAP[e.key] || e.key,
                 modifiers: get_modifiers(e),
+                time_stamp: get_time_stamp(),
             };
             if (!e.repeat) { that.send(event); } // dont do the sticky key thing
             e.stopPropagation();
@@ -331,7 +333,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         if (w === 0 && h === 0) { return; }
         if (this._current_size[0] !== w || this._current_size[1] !== h || this._current_size[2] !== r) {
             this._current_size = [w, h, r];
-            this.send_throttled({ event_type: 'resize', width: w, height: h, pixel_ratio: r }, 200);
+            this.send_throttled({ event_type: 'resize', width: w, height: h, pixel_ratio: r, time_stamp: get_time_stamp() }, 200);
         }
     }
 
@@ -422,5 +424,10 @@ function create_pointer_event (el, e, pointers, event_type) {
         modifiers: get_modifiers(e),
         ntouches: ntouches,
         touches: touches,
+        time_stamp: get_time_stamp(),
     };
+}
+
+function get_time_stamp() {
+    return Date.now() / 1000;
 }
