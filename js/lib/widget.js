@@ -258,12 +258,15 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         function send_wheel_event () {
             let e = that._wheel_state.e;
             let rect = that.img.getBoundingClientRect();
+            var buttons = [];
+            for (let b of [0, 1, 2, 3, 4, 5]) { if ((1 << b) & e.buttons) { buttons.push(b + 1); } }
             let event = {
                 event_type: 'wheel',
                 x: Number(e.clientX - rect.left),
                 y: Number(e.clientY - rect.top),
                 dx: that._wheel_state.dx,
                 dy: that._wheel_state.dy,
+                buttons: buttons,
                 modifiers: get_modifiers(e),
             };
             that._wheel_state.dx = 0;
