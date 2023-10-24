@@ -215,6 +215,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
 
         // Pointer events
         this._pointers = {};
+        this._last_buttons = [];
         this.img.addEventListener('pointerdown', function (e) {
             // This is what makes the JS PointerEvent so great. We can enable mouse capturing
             // and we will receive mouse-move and mouse-up even when the pointer moves outside
@@ -223,6 +224,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             that.img.setPointerCapture(e.pointerId);
             that._pointers[e.pointerId] = e;
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_down');
+            that._last_buttons = event.buttons;
             that.send(event);
             if (!e.altKey) { e.preventDefault(); }
         });
@@ -231,6 +233,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             // The event we emit will still include the touch hat goes up.
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_up');
             delete that._pointers[e.pointerId];
+            that._last_buttons = event.buttons;
             that.send(event);
         });
         this.img.addEventListener('pointermove', function (e) {
@@ -254,19 +257,18 @@ export class RemoteFrameBufferView extends DOMWidgetView {
 
         // Scrolling. Need a special throttling that accumulates the deltas.
         // Also, only consume the wheel event when we have focus.
+        // On Firefox, e.buttons is always 0 for wheel events, so we use a cached value for the buttons.
         this._wheel_state = { dx: 0, dy: 0, e: null, pending: false };
         function send_wheel_event () {
             let e = that._wheel_state.e;
             let rect = that.img.getBoundingClientRect();
-            var buttons = [];
-            for (let b of [0, 1, 2, 3, 4, 5]) { if ((1 << b) & e.buttons) { buttons.push(b + 1); } }
             let event = {
                 event_type: 'wheel',
                 x: Number(e.clientX - rect.left),
                 y: Number(e.clientY - rect.top),
                 dx: that._wheel_state.dx,
                 dy: that._wheel_state.dy,
-                buttons: buttons,
+                buttons: that._last_buttons,
                 modifiers: get_modifiers(e),
                 time_stamp: get_time_stamp(),
             };
