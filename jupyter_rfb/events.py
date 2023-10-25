@@ -4,6 +4,7 @@ This spec specifies the events that are passed to the widget's
 Events are simple dict objects containing at least the key `event_type`.
 Additional keys provide more information regarding the event.
 
+*Last update: 24-10-2023*
 
 Event types
 -----------
@@ -14,6 +15,7 @@ Event types
     * *width*: in logical pixels.
     * *height*: in logical pixels.
     * *pixel_ratio*: the pixel ratio between logical and physical pixels.
+    * *time_stamp*: a timestamp in seconds.
 
 * **close**: emitted when the widget is closed (i.e. destroyed).
   This event has no additional keys.
@@ -27,8 +29,9 @@ Event types
     * *buttons*: a list of buttons being pressed down.
     * *modifiers*: a list of modifier keys being pressed down. See section below for details.
     * *ntouches*: the number of simultaneous pointers being down.
-    * *touches*: a dict with int keys and dict values.
-      The values contain "x", "y", "pressure".
+    * *touches*: a dict with int keys (pointer id's), and values that are dicts
+      that contain "x", "y", and "pressure".
+    * *time_stamp*: a timestamp in seconds.
 
 * **pointer_up**: emitted when the user releases a pointer.
   This event has the same keys as the pointer down event.
@@ -60,15 +63,25 @@ Event types
     * *dy*: the vertical scroll delta (positive means scroll down or zoom out).
     * *x*: the mouse horizontal position during the scroll.
     * *y*: the mouse vertical position during the scroll.
+    * *buttons*: a list of buttons being pressed down.
     * *modifiers*: a list of modifier keys being pressed down.
+    * *time_stamp*: a timestamp in seconds.
 
 * **key_down**: emitted when a key is pressed down.
 
     * *key*: the key being pressed as a string. See section below for details.
     * *modifiers*: a list of modifier keys being pressed down.
+    * *time_stamp*: a timestamp in seconds.
 
 * **key_up**: emitted when a key is released.
   This event has the same keys as the key down event.
+
+
+Time stamps
+-----------
+
+Since the time origin of ``time_stamp`` values is undefined,
+time stamp values only make sense in relation to other time stamps.
 
 
 Mouse buttons
