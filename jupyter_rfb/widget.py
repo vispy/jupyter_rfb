@@ -14,6 +14,7 @@ the server will slow down too.
 
 import asyncio
 import time
+from base64 import encodebytes
 
 import ipywidgets
 import numpy as np
@@ -90,6 +91,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_last_resize_event = None
         self._rfb_warned_png = False
         self._rfb_lossless_draw_info = None
+        self._use_websocket = False  # Could be a prop, private for now
         # Init stats
         self.reset_stats()
         # Setup events
@@ -285,6 +287,12 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Turn array into a based64-encoded JPEG or PNG
         t1 = time.perf_counter()
         mimetype, data = array2compressed(array, quality)
+        if self._use_websocket:
+            datas = [data]
+            data_b64 = None
+        else:
+            datas = []
+            data_b64 = f"data:{mimetype};base64," + encodebytes(data).decode()
         t2 = time.perf_counter()
 
         if "jpeg" in mimetype:
@@ -314,10 +322,11 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         msg = dict(
             type="framebufferdata",
             mimetype=mimetype,
+            data_b64=data_b64,
             index=self._rfb_frame_index,
             timestamp=timestamp,
         )
-        self.send(msg, [data])
+        self.send(msg, datas)
 
     # ----- related to stats
 
