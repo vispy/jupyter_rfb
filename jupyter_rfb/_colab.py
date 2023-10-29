@@ -20,6 +20,7 @@ def get_colab_metadata():
     if not IN_COLAB:
         return None
     from google.colab.output._widgets import _installed_url as COLAB_URL
+
     meta = dict()
     meta["application/vnd.jupyter.widget-view+json"] = {
         "colab": {"custom_widget_manager": {"url": COLAB_URL}}
