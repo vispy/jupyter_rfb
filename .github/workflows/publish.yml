@@ -35,4 +35,7 @@ jobs:
       - name: publish npm
         run: |
           cd js
-          yarn publish
+          yarn publish --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
