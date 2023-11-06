@@ -50,6 +50,7 @@ class MyRFB(RemoteFrameBuffer):
         self._rfb_maybe_draw()
 
     def flush(self):
+        """Prentend to flush a frame by setting the widget's frame feedback."""
         if not len(self.msgs):
             return
         self.frame_feedback["index"] = len(self.msgs)
