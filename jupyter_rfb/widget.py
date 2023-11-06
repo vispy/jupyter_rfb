@@ -91,7 +91,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_last_resize_event = None
         self._rfb_warned_png = False
         self._rfb_lossless_draw_info = None
-        self._use_websocket = False  # Could be a prop, private for now
+        self._use_websocket = True  # Could be a prop, private for now
         # Init stats
         self.reset_stats()
         # Setup events
