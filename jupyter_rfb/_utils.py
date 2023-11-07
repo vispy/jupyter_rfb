@@ -17,7 +17,7 @@ def array2compressed(array, quality=90):
     """Convert the given image (a numpy array) as a compressed array.
 
     If the quality is 100, a PNG is returned. Otherwise, JPEG is
-    preferred and PNG is used as a fallback. Returns (preamble, bytes).
+    preferred and PNG is used as a fallback. Returns (mimetype, bytes).
     """
 
     # Drop alpha channel if there is one
@@ -25,16 +25,16 @@ def array2compressed(array, quality=90):
         array = array[:, :, :3]
 
     if quality >= 100:
-        preamble = "data:image/png;base64,"
+        mimetype = "image/png"
         result = array2png(array)
     else:
-        preamble = "data:image/jpeg;base64,"
+        mimetype = "image/jpeg"
         result = array2jpg(array, quality)
         if result is None:
-            preamble = "data:image/png;base64,"
+            mimetype = "image/png"
             result = array2png(array)
 
-    return preamble, result
+    return mimetype, result
 
 
 class RFBOutputContext(ipywidgets.Output):

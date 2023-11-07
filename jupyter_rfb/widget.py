@@ -91,6 +91,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         self._rfb_last_resize_event = None
         self._rfb_warned_png = False
         self._rfb_lossless_draw_info = None
+        self._use_websocket = True  # Could be a prop, private for now
         # Init stats
         self.reset_stats()
         # Setup events
@@ -285,12 +286,16 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
         # Turn array into a based64-encoded JPEG or PNG
         t1 = time.perf_counter()
-        preamble, data = array2compressed(array, quality)
+        mimetype, data = array2compressed(array, quality)
+        if self._use_websocket:
+            datas = [data]
+            data_b64 = None
+        else:
+            datas = []
+            data_b64 = f"data:{mimetype};base64," + encodebytes(data).decode()
         t2 = time.perf_counter()
-        src = preamble + encodebytes(data).decode()
-        t3 = time.perf_counter()
 
-        if "jpeg" in preamble:
+        if "jpeg" in mimetype:
             self._rfb_schedule_lossless_draw(array)
         else:
             self._rfb_cancel_lossless_draw()
@@ -308,7 +313,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         else:
             # Stats
             self._rfb_stats["img_encoding_sum"] += t2 - t1
-            self._rfb_stats["b64_encoding_sum"] += t3 - t2
             self._rfb_stats["sent_frames"] += 1
             if self._rfb_stats["start_time"] <= 0:  # Start measuring
                 self._rfb_stats["start_time"] = timestamp
@@ -317,11 +321,12 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
         # Compose message and send
         msg = dict(
             type="framebufferdata",
-            src=src,
+            mimetype=mimetype,
+            data_b64=data_b64,
             index=self._rfb_frame_index,
             timestamp=timestamp,
         )
-        self.send(msg)
+        self.send(msg, datas)
 
     # ----- related to stats
 
@@ -336,7 +341,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
             "roundtrip_sum": 0,
             "delivery_sum": 0,
             "img_encoding_sum": 0,
-            "b64_encoding_sum": 0,
         }
 
     def get_stats(self):
@@ -364,7 +368,6 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
             "roundtrip": d["roundtrip_sum"] / roundtrip_count_div,
             "delivery": d["delivery_sum"] / roundtrip_count_div,
             "img_encoding": d["img_encoding_sum"] / sent_frames_div,
-            "b64_encoding": d["b64_encoding_sum"] / sent_frames_div,
             "fps": d["confirmed_frames"] / fps_div,
         }
 

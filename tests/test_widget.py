@@ -25,8 +25,10 @@ class MyRFB(RemoteFrameBuffer):
         self.has_visible_views = True
         self.msgs = []
 
-    def send(self, msg):
+    def send(self, msg, buffers):
         """Overload the send method so we can check what was sent."""
+        msg = msg.copy()
+        msg["buffers"] = buffers
         self.msgs.append(msg)
 
     def get_frame(self):
@@ -46,6 +48,14 @@ class MyRFB(RemoteFrameBuffer):
         if request:
             self._rfb_draw_requested = True
         self._rfb_maybe_draw()
+
+    def flush(self):
+        """Prentend to flush a frame by setting the widget's frame feedback."""
+        if not len(self.msgs):
+            return
+        self.frame_feedback["index"] = len(self.msgs)
+        self.frame_feedback["timestamp"] = self.msgs[-1]["timestamp"]
+        self.frame_feedback["localtime"] = time.time()
 
 
 def test_widget_frames_and_stats_1():
@@ -69,10 +79,7 @@ def test_widget_frames_and_stats_1():
     assert fs.get_stats()["sent_frames"] == 1
     assert fs.get_stats()["confirmed_frames"] == 0
 
-    # Flush
-    fs.frame_feedback["index"] = 1
-    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
-    fs.frame_feedback["localtime"] = time.time()
+    fs.flush()
 
     # Trigger, the previous request is still open
     fs.trigger(False)
@@ -81,10 +88,7 @@ def test_widget_frames_and_stats_1():
     assert fs.get_stats()["sent_frames"] == 2
     assert fs.get_stats()["confirmed_frames"] == 1
 
-    # Flush
-    fs.frame_feedback["index"] = 2
-    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
-    fs.frame_feedback["localtime"] = time.time()
+    fs.flush()
 
     fs.trigger(False)
     assert len(fs.msgs) == 2
@@ -135,10 +139,7 @@ def test_widget_frames_and_stats_3():
     assert fs.get_stats()["sent_frames"] == 3
     assert fs.get_stats()["confirmed_frames"] == 0
 
-    # Flush
-    fs.frame_feedback["index"] = 3
-    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
-    fs.frame_feedback["localtime"] = time.time()
+    fs.flush()
 
     # Trigger with True. We request a new frame, but there was a request open
     fs.trigger(True)
@@ -147,10 +148,7 @@ def test_widget_frames_and_stats_3():
     assert fs.get_stats()["sent_frames"] == 4
     assert fs.get_stats()["confirmed_frames"] == 3
 
-    # Flush
-    fs.frame_feedback["index"] = 4
-    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
-    fs.frame_feedback["localtime"] = time.time()
+    fs.flush()
 
     # Trigger, but nothing to send (no frame pending)
     fs.trigger(False)
@@ -173,10 +171,7 @@ def test_widget_frames_and_stats_3():
     fs.trigger(True)
     assert len(fs.msgs) == 7
 
-    # Flush
-    fs.frame_feedback["index"] = 7
-    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
-    fs.frame_feedback["localtime"] = time.time()
+    fs.flush()
 
     # Trigger with False. no new request, but there was a request open
     fs.trigger(False)
@@ -259,10 +254,7 @@ def test_has_visible_views():
     fs.trigger(True)
     assert len(fs.msgs) == 1
 
-    # Flush
-    fs.frame_feedback["index"] = 1
-    fs.frame_feedback["timestamp"] = fs.msgs[-1]["timestamp"]
-    fs.frame_feedback["localtime"] = time.time()
+    fs.flush()
 
     fs.has_visible_views = False
     for _ in range(3):
@@ -302,3 +294,35 @@ def test_snapshot():
     s = w.snapshot()
     assert isinstance(s, Snapshot)
     assert np.all(s.data == w.get_frame())
+
+
+def test_use_websocket():
+    """Test the use of websocket and base64."""
+
+    w = MyRFB()
+
+    # The default uses a websocket
+    w.flush()
+    w.trigger(True)
+    msg = w.msgs[-1]
+    assert len(msg["buffers"]) == 1
+    assert isinstance(msg["buffers"][0], bytes)
+    assert msg["data_b64"] is None
+
+    # Websocket use can be turned off, falling back to base64 encoded images instead
+    w._use_websocket = False
+    w.flush()
+    w.trigger(True)
+    msg = w.msgs[-1]
+    assert len(msg["buffers"]) == 0
+    assert isinstance(msg["data_b64"], str)
+    assert msg["data_b64"].startswith("data:image/jpeg;base64,")
+
+    # Turn it back on
+    w._use_websocket = True
+    w.flush()
+    w.trigger(True)
+    msg = w.msgs[-1]
+    assert len(msg["buffers"]) == 1
+    assert isinstance(msg["buffers"][0], bytes)
+    assert msg["data_b64"] is None
