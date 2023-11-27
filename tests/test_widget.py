@@ -10,6 +10,7 @@ import numpy as np
 from pytest import raises
 from jupyter_rfb import RemoteFrameBuffer
 from jupyter_rfb._utils import Snapshot
+from traitlets import TraitError
 
 
 class MyRFB(RemoteFrameBuffer):
@@ -211,7 +212,7 @@ def test_widget_traits():
     assert w.max_buffered_frames == 2
     w.max_buffered_frames = 99
     w.max_buffered_frames = 1
-    with raises(Exception):  # TraitError -> min 1
+    with raises(TraitError):  # TraitError -> min 1
         w.max_buffered_frames = 0
 
     assert w.css_width.endswith("px")
