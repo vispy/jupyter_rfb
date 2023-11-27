@@ -47,6 +47,8 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     * *max_buffered_frames*: the number of frames that is allowed to be "in-flight",
       i.e. sent, but not yet confirmed by the client. Default 2. Higher values
       may result in a higher FPS at the cost of introducing lag.
+    * *cursor*: the cursor style, ex: "crosshair", "grab". Valid cursors:
+      https://developer.mozilla.org/en-US/docs/Web/CSS/cursor#keyword
 
     """
 
@@ -75,6 +77,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     css_width = Unicode("500px").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
+    cursor = Unicode("default").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

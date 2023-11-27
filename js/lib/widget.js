@@ -35,7 +35,8 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
             css_width: '500px',
             css_height: '300px',
             resizable: true,
-            has_visible_views: false
+            has_visible_views: false,
+            cursor: 'default'
         };
     }
     initialize() {
@@ -203,6 +204,10 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         this.img.src = this.model.last_frame.src;
         this.el.appendChild(this.img);
         this.model.collect_view_img_elements();
+
+        // Cursor
+        this.el.style.cursor = this.model.get('cursor');
+        this.model.on('change:cursor', function () { this.el.style.cursor = this.model.get('cursor'); }, this);
 
         // Set of throttler functions to send events at a friendly pace
         this._throttlers = {};
