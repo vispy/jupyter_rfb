@@ -159,7 +159,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
                 self.request_draw()
             elif content["event_type"] == "close":
                 self._repr_mimebundle_ = None
-            # Turn lists into tuples
+            # Turn lists into tuples (js/json does not have tuples)
             if "buttons" in content:
                 content["buttons"] = tuple(content["buttons"])
             if "modifiers" in content:
