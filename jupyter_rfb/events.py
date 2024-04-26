@@ -26,8 +26,8 @@ Event types
     * *x*: horizontal position of the pointer within the widget.
     * *y*: vertical position of the pointer within the widget.
     * *button*: the button to which this event applies. See section below for details.
-    * *buttons*: a list of buttons being pressed down.
-    * *modifiers*: a list of modifier keys being pressed down. See section below for details.
+    * *buttons*: a tuple of buttons being pressed down.
+    * *modifiers*: a tuple of modifier keys being pressed down. See section below for details.
     * *ntouches*: the number of simultaneous pointers being down.
     * *touches*: a dict with int keys (pointer id's), and values that are dicts
       that contain "x", "y", and "pressure".
@@ -63,14 +63,14 @@ Event types
     * *dy*: the vertical scroll delta (positive means scroll down or zoom out).
     * *x*: the mouse horizontal position during the scroll.
     * *y*: the mouse vertical position during the scroll.
-    * *buttons*: a list of buttons being pressed down.
-    * *modifiers*: a list of modifier keys being pressed down.
+    * *buttons*: a tuple of buttons being pressed down.
+    * *modifiers*: a tuple of modifier keys being pressed down.
     * *time_stamp*: a timestamp in seconds.
 
 * **key_down**: emitted when a key is pressed down.
 
     * *key*: the key being pressed as a string. See section below for details.
-    * *modifiers*: a list of modifier keys being pressed down.
+    * *modifiers*: a tuple of modifier keys being pressed down.
     * *time_stamp*: a timestamp in seconds.
 
 * **key_up**: emitted when a key is released.
