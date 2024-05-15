@@ -1,6 +1,6 @@
 {
   "name": "jupyter_rfb",
-  "version": "0.4.3",
+  "version": "0.1.0",
   "description": "Remote Frame Buffer for Jupyter",
   "license": "MIT",
   "author": "Almar Klein",
@@ -31,7 +31,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.1.3",
+    "@jupyterlab/builder": "^3.6 || ^4",
     "rimraf": "^2.6.1",
     "webpack": "^5",
     "webpack-cli": "^5.1.4"
