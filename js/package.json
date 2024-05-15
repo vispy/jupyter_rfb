@@ -31,7 +31,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^3.6.7",
+    "@jupyterlab/builder": "^3.6 || ^4",
     "rimraf": "^2.6.1",
     "webpack": "^5",
     "webpack-cli": "^5.1.4"
