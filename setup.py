@@ -60,7 +60,7 @@ setup_args = dict(
         "ipywidgets>=7.6.0,<9",
         "jupyterlab-widgets",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     packages=find_packages(),
     zip_safe=False,
     cmdclass=cmdclass,
@@ -83,9 +83,9 @@ setup_args = dict(
         "Topic :: Multimedia :: Graphics",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
 )
 
