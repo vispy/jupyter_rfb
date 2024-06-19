@@ -11,7 +11,7 @@ build:
   jobs:
     post_system_dependencies:
     - nohup Xvfb $DISPLAY -screen 0 1400x900x24 -dpi 96 +extension RANDR +render &
-    post_install:
+    pre_install:
     - npm ci
     - npm install -g yarn
     - pip install jupyter_packaging
