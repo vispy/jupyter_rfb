@@ -5,6 +5,7 @@ build:
     nodejs: '16'
     python: '3.11'
   apt_packages:
+  - npm
   - freeglut3-dev
   - xvfb
   - x11-utils
