@@ -5,14 +5,14 @@ build:
     nodejs: '16'
     python: '3.11'
   apt_packages:
-  - npm
   - freeglut3-dev
   - xvfb
   - x11-utils
   jobs:
     post_system_dependencies:
-    - sudo npm install --global yarn
     - nohup Xvfb $DISPLAY -screen 0 1400x900x24 -dpi 96 +extension RANDR +render &
+    post_install:
+    - npm install -g yarn
 sphinx:
   builder: html
   configuration: docs/conf.py
