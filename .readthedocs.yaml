@@ -11,7 +11,7 @@ build:
   - x11-utils
   jobs:
     post_system_dependencies:
-    - npm install yarn
+    - sudo npm install --global yarn
     - nohup Xvfb $DISPLAY -screen 0 1400x900x24 -dpi 96 +extension RANDR +render &
 sphinx:
   builder: html
