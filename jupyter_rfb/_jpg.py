@@ -99,12 +99,36 @@ class PillowJpegEncoder(JpegEncoder):
         return f.getvalue()
 
 
+class OpenCVJpegEncoder(JpegEncoder):
+    """A JPEG encoder using the OpenCV library."""
+
+    def __init__(self):
+        import cv2
+
+        self.cv2 = cv2
+
+    def _encode(self, array, quality):
+        if len(array.shape) == 3 and array.shape[2] == 3:
+            # Convert RGB to BGR if needed (assume input is RGB)
+            # array = self.cv2.cvtColor(array, self.cv2.COLOR_RGB2BGR)
+            array = array[:, :, ::-1]
+
+        # Encode with the specified quality
+        encode_param = [self.cv2.IMWRITE_JPEG_QUALITY, quality]
+        success, encoded_image = self.cv2.imencode(".jpg", array, encode_param)
+        if not success:
+            raise RuntimeError("OpenCV failed to encode image")
+
+        return encoded_image.tobytes()
+
+
 def select_encoder():
     """Select an encoder."""
 
     for cls in [
         SimpleJpegEncoder,  # simplejpeg is fast and lean
         PillowJpegEncoder,  # pillow is commonly available
+        OpenCVJpegEncoder,  # opencv is readily installed in conda environments
     ]:
         try:
             return cls()

@@ -8,6 +8,7 @@ from jupyter_rfb._jpg import (
     select_encoder,
     SimpleJpegEncoder,
     PillowJpegEncoder,
+    OpenCVJpegEncoder,
 )
 
 
@@ -36,6 +37,13 @@ def test_simplejpeg_jpeg_encoder():
 def test_pillow_jpeg_encoder():
     """Test the pillow encoder."""
     encoder = PillowJpegEncoder()
+    _perform_checks(encoder)
+    _perform_error_checks(encoder)
+
+
+def test_opencv_jpeg_encoder():
+    """Test the opencv encoder."""
+    encoder = OpenCVJpegEncoder()
     _perform_checks(encoder)
     _perform_error_checks(encoder)
 
