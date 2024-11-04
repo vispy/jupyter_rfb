@@ -110,8 +110,7 @@ class OpenCVJpegEncoder(JpegEncoder):
     def _encode(self, array, quality):
         if len(array.shape) == 3 and array.shape[2] == 3:
             # Convert RGB to BGR if needed (assume input is RGB)
-            # array = self.cv2.cvtColor(array, self.cv2.COLOR_RGB2BGR)
-            array = array[:, :, ::-1]
+            array = self.cv2.cvtColor(array, self.cv2.COLOR_RGB2BGR)
 
         # Encode with the specified quality
         encode_param = [self.cv2.IMWRITE_JPEG_QUALITY, quality]
