@@ -1,6 +1,7 @@
 """Test jpg module."""
 
 import numpy as np
+import pytest
 from pytest import raises
 
 from jupyter_rfb._jpg import (
@@ -8,6 +9,7 @@ from jupyter_rfb._jpg import (
     select_encoder,
     SimpleJpegEncoder,
     PillowJpegEncoder,
+    OpenCVJpegEncoder,
 )
 
 
@@ -28,6 +30,7 @@ def test_array2jpg():
 
 def test_simplejpeg_jpeg_encoder():
     """Test the simplejpeg encoder."""
+    pytest.importorskip("simplejpeg")
     encoder = SimpleJpegEncoder()
     _perform_checks(encoder)
     _perform_error_checks(encoder)
@@ -35,7 +38,16 @@ def test_simplejpeg_jpeg_encoder():
 
 def test_pillow_jpeg_encoder():
     """Test the pillow encoder."""
+    pytest.importorskip("PIL")
     encoder = PillowJpegEncoder()
+    _perform_checks(encoder)
+    _perform_error_checks(encoder)
+
+
+def test_opencv_jpeg_encoder():
+    """Test the opencv encoder."""
+    pytest.importorskip("cv2")
+    encoder = OpenCVJpegEncoder()
     _perform_checks(encoder)
     _perform_error_checks(encoder)
 
@@ -111,9 +123,11 @@ def test_select_encoder():
     # Sabotage
     simple_init = SimpleJpegEncoder.__init__
     pillow_init = PillowJpegEncoder.__init__
+    cv2_init = OpenCVJpegEncoder.__init__
     try:
         SimpleJpegEncoder.__init__ = lambda self: raise_importerror()
         PillowJpegEncoder.__init__ = lambda self: raise_importerror()
+        OpenCVJpegEncoder.__init__ = lambda self: raise_importerror()
 
         encoder = select_encoder()
         assert not isinstance(encoder, (SimpleJpegEncoder, PillowJpegEncoder))
@@ -125,3 +139,4 @@ def test_select_encoder():
     finally:
         SimpleJpegEncoder.__init__ = simple_init
         PillowJpegEncoder.__init__ = pillow_init
+        OpenCVJpegEncoder.__init__ = cv2_init
