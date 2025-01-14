@@ -43,7 +43,7 @@ insert_examples()
 # -- Project information -----------------------------------------------------
 
 project = "jupyter_rfb"
-copyright = "2021-2023, Almar Klein"
+copyright = "2021-2025, jupyter_rfb contributors"
 author = "Almar Klein"
 
 
