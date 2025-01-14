@@ -83,7 +83,7 @@ def test_output_context():
 
     # The context captures errors and sends tracebacks to its "stdout stream"
     with c:
-        1 / 0
+        1 / 0  # noqa
     assert len(c.stderrs) == 1
     assert "Traceback" in c.stderrs[0]
     assert "ZeroDivisionError" in c.stderrs[0]

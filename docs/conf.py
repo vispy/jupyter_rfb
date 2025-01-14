@@ -10,7 +10,7 @@ sys.path.insert(0, ROOT_DIR)
 
 import ipywidgets  # noqa: F401, E402
 
-import jupyter_rfb  # noqa: F401, E402
+import jupyter_rfb  # noqa: E402
 
 
 def insert_examples():

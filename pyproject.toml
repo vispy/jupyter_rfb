@@ -63,7 +63,11 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "N", "B", "RUF"]
-ignore = []
+ignore = [
+    "E501",   # Line too long
+    "E731",   # Do not assign a `lambda` expression, use a `def`
+    "RUF006", # Store a reference to the return value of `loop.create_task`
+]
 
 
 [tool.coverage.report]

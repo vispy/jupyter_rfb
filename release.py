@@ -61,7 +61,7 @@ def release(version):
         int(part) if part.isnumeric() else part for part in version.split(".")
     )
     if len(version_info) == 3:
-        version_info = version_info + ("final", 0)
+        version_info = (*version_info, "final", 0)
     if len(version_info) > 3 and version_info[3] == "final":
         tag_name = ".".join(str(part) for part in version_info[:3])
     else:
