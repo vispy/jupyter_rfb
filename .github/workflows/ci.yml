@@ -13,22 +13,21 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: 3.13
       - name: Install dependencies
-        shell: bash
         run: |
-            python -m pip install --upgrade pip
-            pip install black flake8 flake8-docstrings flake8-bugbear flake8-debugger
-      - name: Black
-        shell: bash
-        run: black --check .
-      - name: Flake
-        shell: bash
-        run: flake8 .
+              python -m pip install --upgrade pip
+              pip install ruff
+      - name: Ruff lint
+        run: |
+              ruff check --output-format=github .
+      - name: Ruff format
+        run: |
+             ruff format --check .
 
   build:
     name: ${{ matrix.name }}
@@ -46,9 +45,12 @@ jobs:
           - name: Linux py311
             os: ubuntu-latest
             pyversion: '3.11'
-          # - name: Linux py312  Not yet, because zmq
-          #   os: ubuntu-latest
-          #   pyversion: '3.12'
+          - name: Linux py312
+            os: ubuntu-latest
+            pyversion: '3.12'
+          - name: Linux py313
+            os: ubuntu-latest
+            pyversion: '3.13'
           # Other systems / interpreters
           - name: Linux pypy3
             os: ubuntu-latest
@@ -62,21 +64,20 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.pyversion }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyversion }}
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
       - name: Install dependencies
         shell: bash
         run: |
             python -m pip install --upgrade pip
-            pip install -U jupyter_packaging pytest simplejpeg pillow opencv-python-headless
-            pip install .
+            pp install -e.[dev]
             rm -rf ./jupyter_rfb ./build ./egg-info
       - name: Test with pytest
         shell: bash

@@ -3,7 +3,7 @@ build:
   os: ubuntu-22.04
   tools:
     nodejs: '18'
-    python: '3.11'
+    python: '3.13'
   apt_packages:
   - freeglut3-dev
   - xvfb

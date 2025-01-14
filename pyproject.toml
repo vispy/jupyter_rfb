@@ -27,7 +27,14 @@ classifiers = [
 ]
 dependencies = ["ipywidgets>=7.6.0,<9", "jupyterlab-widgets", "numpy"]
 [project.optional-dependencies]
-dev = ["ruff", "pytest"]
+dev = [
+    "ruff",
+    "pytest",
+    "jupyter_packaging",
+    "simplejpeg",
+    "pillow",
+    "opencv-python-headless",
+]
 
 [project.urls]
 Homepage = "https://github.com/vispy/jupyter_rfb"
