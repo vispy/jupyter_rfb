@@ -64,6 +64,10 @@ jobs:
           - name: MacOS py311
             os: macos-latest
             pyversion: '3.11'
+          - name: Linux py313 complete
+            os: ubuntu-latest
+            pyversion: '3.13'
+            alltests: true
 
     steps:
 
@@ -82,6 +86,11 @@ jobs:
             python -m pip install --upgrade pip
             pip install .[tests]
             rm -rf ./jupyter_rfb ./build ./egg-info
+      - name: Install more dependencies
+        if: ${{ matrix.alltests }}
+        shell: bash
+        run: |
+            pip install -U pillow opencv-python-headless
       - name: Test with pytest
         shell: bash
         run: |
