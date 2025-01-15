@@ -29,7 +29,7 @@ dependencies = ["ipywidgets>=7.6.0,<9", "jupyterlab-widgets", "numpy"]
 [project.optional-dependencies]
 build = ["build", "hatchling", "hatch-jupyter-builder", "twine"]
 lint = ["ruff", "pre-commit"]
-test = ["pytest", "simplejpeg", "pillow", "opencv-python-headless"]
+tests = ["pytest", "simplejpeg", "pillow", "opencv-python-headless"]
 docs = ["numpy", "ipywidgets", "sphinx", "nbsphinx"]
 dev = ["jupyter_rfb[build,lint,tests,docs]"]
 
