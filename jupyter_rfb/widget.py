@@ -22,6 +22,7 @@ from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
 from ._utils import array2compressed, RFBOutputContext, Snapshot
+from ._version import ref_version
 
 
 @ipywidgets.register
@@ -65,9 +66,9 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
     _model_module = Unicode("jupyter_rfb").tag(sync=True)
 
     # Version of the front-end module containing widget view
-    _view_module_version = Unicode("^0.1.0").tag(sync=True)
+    _view_module_version = Unicode(f"^{ref_version}").tag(sync=True)
     # Version of the front-end module containing widget model
-    _model_module_version = Unicode("^0.1.0").tag(sync=True)
+    _model_module_version = Unicode(f"^{ref_version}").tag(sync=True)
 
     # Widget specific traits
     frame_feedback = Dict({}).tag(sync=True)

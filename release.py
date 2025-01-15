@@ -74,7 +74,7 @@ def release(version):
         os.path.join(ROOT_DIR, "pyproject.toml"),
         os.path.join(ROOT_DIR, LIBNAME, "_version.py"),
         os.path.join(ROOT_DIR, "js", "package.json"),
-        os.path.join(ROOT_DIR, "js", "lib", "index.js"),
+        os.path.join(ROOT_DIR, "js", "lib", "widget.js"),
     ]:
         fname = os.path.basename(filename)
         with open(filename, "rb") as f:

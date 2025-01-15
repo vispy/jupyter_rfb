@@ -1,34 +1,35 @@
 import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base';
 
 /*
- * For the kernel counterpart to this file, see widget.py
- * For the base class, see https://github.com/jupyter-widgets/ipywidgets/blob/master/packages/base/src/widget.ts
- *
- * The server sends frames to the client, and the client sends back
- * a confirmation when it has processed the frame.
- *
- * The client queues the frames it receives and processes them one-by-one
- * at the browser's pace, using requestAnimationFrame. We send back a
- * confirmation when the frame is processed (not when it is technically received).
- * It is the responsibility of the server to not send too many frames beyond the
- * last confirmed one.
- *
- * When setting the img.src attribute, the browser still needs to actually render
- * the image. We wait for this before requesting a new animation. If we don't do
- * this on FF, the animation is not smooth because the image "gets stuck".
- */
+* For the kernel counterpart to this file, see widget.py
+* For the base class, see https://github.com/jupyter-widgets/ipywidgets/blob/master/packages/base/src/widget.ts
+*
+* The server sends frames to the client, and the client sends back
+* a confirmation when it has processed the frame.
+*
+* The client queues the frames it receives and processes them one-by-one
+* at the browser's pace, using requestAnimationFrame. We send back a
+* confirmation when the frame is processed (not when it is technically received).
+* It is the responsibility of the server to not send too many frames beyond the
+* last confirmed one.
+*
+* When setting the img.src attribute, the browser still needs to actually render
+* the image. We wait for this before requesting a new animation. If we don't do
+* this on FF, the animation is not smooth because the image "gets stuck".
+*/
 
+export const version = "0.4.4";
 
 export class RemoteFrameBufferModel extends DOMWidgetModel {
     defaults() {
         return {
-          ...super.defaults(),
+            ...super.defaults(),
             _model_name: 'RemoteFrameBufferModel',
             _view_name: 'RemoteFrameBufferView',
             _model_module: 'jupyter_rfb',
             _view_module: 'jupyter_rfb',
-            _model_module_version: '0.1.0',
-            _view_module_version: '0.1.0',
+            _model_module_version: version,
+            _view_module_version: version,
             // For the frames
             frame_feedback: {},
             // For the widget
@@ -64,7 +65,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         this._request_animation_frame();
     }
 
-    async collect_view_img_elements () {
+    async collect_view_img_elements() {
         // Here we collect img elements corresponding to the current views.
         // We also set their onload methods which we use to schedule new draws.
         // Plus we reset out visibility obserer.
@@ -98,7 +99,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
     _intersection_callback(entries, observer) {
         // This gets called when one of the views becomes visible/invisible.
         // Note that entries only contains the *changed* elements.
-        
+
         // Set visibility of changed img elements.
         for (let entry of entries) {
             entry.target._is_visible = entry.isIntersecting;
@@ -109,7 +110,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
             if (img._is_visible) { count += 1; }
         }
         // If the state changed, update our flag
-        let has_visible_views = count > 0; 
+        let has_visible_views = count > 0;
         if (has_visible_views != this.get("has_visible_views")) {
             this.set('has_visible_views', has_visible_views);
             this.save_changes();
@@ -124,7 +125,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         this.save_changes();
     }
 
-    _request_animation_frame () {
+    _request_animation_frame() {
         // Request an animation frame, but with a tiny delay, just to avoid
         // straining the browser. This seems to actually make things more smooth.
         if (!this._img_update_pending) {
@@ -216,8 +217,8 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         // Setting the this.el's size right now has no effect. We also set it in _check_size() below.
         this.img.style.width = '100%';
         this.img.style.height = '100%';
-        this.el.style.width =  this.model.get('css_width');
-        this.el.style.height =  this.model.get('css_height');
+        this.el.style.width = this.model.get('css_width');
+        this.el.style.height = this.model.get('css_height');
         this.el.style.resize = this.model.get('resizable') ? 'both' : 'none';
 
         // Keep track of size changes from the server
@@ -277,7 +278,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         // Also, only consume the wheel event when we have focus.
         // On Firefox, e.buttons is always 0 for wheel events, so we use a cached value for the buttons.
         this._wheel_state = { dx: 0, dy: 0, e: null, pending: false };
-        function send_wheel_event () {
+        function send_wheel_event() {
             let e = that._wheel_state.e;
             let rect = that.img.getBoundingClientRect();
             let event = {
@@ -297,7 +298,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         }
         this.img.addEventListener('wheel', function (e) {
             if (window.document.activeElement !== that.focus_el) { return; }
-            let scales = [ 1 / window.devicePixelRatio, 16, 600 ];  // pixel, line, page
+            let scales = [1 / window.devicePixelRatio, 16, 600];  // pixel, line, page
             let scale = scales[e.deltaMode];
             that._wheel_state.dx += e.deltaX * scale;
             that._wheel_state.dy += e.deltaY * scale;
@@ -310,7 +311,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         });
 
         // Key events - approach inspired from ipyevents
-        function key_event_handler (e) {
+        function key_event_handler(e) {
             // Failsafe in case the element is deleted or detached.
             if (that.el.offsetParent === null) { return; }
             let event = {
@@ -357,7 +358,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         }
     }
 
-    send_throttled (msg, wait) {
+    send_throttled(msg, wait) {
         // Like .send(), but throttled
         let event_type = msg.event_type || '';
         let func = this._throttlers[event_type];
@@ -378,13 +379,13 @@ var KEYMAP = {
 };
 
 
-function get_modifiers (e) {
+function get_modifiers(e) {
     let modifiers = ['Alt', 'Shift', 'Ctrl', 'Meta'].filter((n) => e[n.toLowerCase() + 'Key']);
     return modifiers.map((m) => KEYMAP[m] || m);
 }
 
 
-function throttled (func, wait) {
+function throttled(func, wait) {
     var context, args, result;
     var timeout = null;
     var previous = 0;
@@ -412,7 +413,7 @@ function throttled (func, wait) {
 }
 
 
-function create_pointer_event (el, e, pointers, event_type) {
+function create_pointer_event(el, e, pointers, event_type) {
     let rect = el.getBoundingClientRect();
     let offset = [rect.left, rect.top];
     let main_x = Number(e.clientX - offset[0]);
