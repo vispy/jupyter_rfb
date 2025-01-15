@@ -12,6 +12,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -29,10 +31,11 @@ jobs:
         run: |
              ruff format --check .
 
-  build:
+  tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           # Python versions
@@ -77,7 +80,7 @@ jobs:
         shell: bash
         run: |
             python -m pip install --upgrade pip
-            pip install -e.[dev]
+            pip install .[tests]
             rm -rf ./jupyter_rfb ./build ./egg-info
       - name: Test with pytest
         shell: bash

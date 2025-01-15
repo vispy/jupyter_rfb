@@ -27,14 +27,11 @@ classifiers = [
 ]
 dependencies = ["ipywidgets>=7.6.0,<9", "jupyterlab-widgets", "numpy"]
 [project.optional-dependencies]
-dev = [
-    "ruff",
-    "pytest",
-    "jupyter_packaging",
-    "simplejpeg",
-    "pillow",
-    "opencv-python-headless",
-]
+build = ["build", "hatchling", "hatch-jupyter-builder", "twine"]
+lint = ["ruff", "pre-commit"]
+test = ["pytest", "simplejpeg", "pillow", "opencv-python-headless"]
+docs = ["numpy", "ipywidgets", "sphinx", "nbsphinx"]
+dev = ["jupyter_rfb[build,lint,tests,docs]"]
 
 [project.urls]
 Homepage = "https://github.com/vispy/jupyter_rfb"
@@ -56,7 +53,7 @@ exclude = [".github"]
 
 [tool.hatch.build.hooks.jupyter-builder]
 ensured-targets = ["js/dist/index.js"]
-dependencies = ["hatch-jupyter-builder>=0.9.1"]
+dependencies = ["hatch-jupyter-builder"]
 build-function = "hatch_jupyter_builder.npm_builder"
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]

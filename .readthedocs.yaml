@@ -21,4 +21,5 @@ python:
   install:
   - method: pip
     path: .
-  - requirements: docs/docs_requirements.txt
+    extra_requirements:
+      - docs
