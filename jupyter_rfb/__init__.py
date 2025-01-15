@@ -1,4 +1,4 @@
-# flake8: noqa
+# ruff: noqa: F401
 from . import events
 from ._version import __version__, version_info
 from .widget import RemoteFrameBuffer

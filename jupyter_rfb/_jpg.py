@@ -25,7 +25,7 @@ class JpegEncoder:
 
         # Check shape
         if len(shape) == 2:
-            shape = shape + (1,)
+            shape = (*shape, 1)
             array = array.reshape(shape)
         if not (len(shape) == 3 and shape[2] in (1, 3)):
             raise ValueError(f"Unexpected image shape: {original_shape}")

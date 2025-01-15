@@ -49,7 +49,7 @@ Install developer tools
 
 .. code-block::
 
-    $ pip install pytest black flake8 flake8-docstrings flake8-bugbear
+    $ pip install ruff pytest
 
 Install dependencies required for tests
 ---------------------------------------
@@ -63,8 +63,8 @@ Automated tools
 
 To make it easier to keep the code valid and clean, we use the following tools:
 
-* Run ``black .`` to autoformat the code.
-* Run ``flake8 .`` for linting and formattinh checks.
+* Run ``ruff format`` to autoformat the code.
+* Run ``ruff check`` for linting and formatting checks.
 * Run ``python release.py`` to do a release (for maintainers only).
 
 

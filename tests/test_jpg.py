@@ -110,7 +110,7 @@ def _perform_error_checks(encoder):
 
 
 def raise_importerror():
-    """Raise an import error (flake forces me to write this docstring)."""
+    """Raise an import error."""
     raise ImportError()
 
 
