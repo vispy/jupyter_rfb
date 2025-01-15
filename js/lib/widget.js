@@ -220,6 +220,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
         this.el.style.width = this.model.get('css_width');
         this.el.style.height = this.model.get('css_height');
         this.el.style.resize = this.model.get('resizable') ? 'both' : 'none';
+        this.el.style.overflow = 'hidden';  // resize does not work if overflow is 'visible'
 
         // Keep track of size changes from the server
         this.model.on('change:css_width', function () { this.el.style.width = this.model.get('css_width'); }, this);
@@ -345,6 +346,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             // prevent massive size due to auto-scroll (issue #62)
             this.el.style.maxWidth = Math.max(1024, window.innerWidth) + 'px';
             this.el.style.maxHeight = Math.max(1024, window.innerHeight) + 'px';
+            this.el.style.overflow = 'hidden';
             return;  // Don't send a resize event now
         }
         // Width and height are in logical pixels.
