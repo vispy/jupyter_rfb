@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "jupyterlab>=4.0.0,==4.*"]
+requires = ["hatchling", "jupyterlab>=3.0.0,<5"]
 build-backend = "hatchling.build"
 
 
