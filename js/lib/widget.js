@@ -240,7 +240,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             // This is what makes the JS PointerEvent so great. We can enable mouse capturing
             // and we will receive mouse-move and mouse-up even when the pointer moves outside
             // the element. Best of all, the capturing is disabled automatically!
-            that.focus_el.focus();
+            that.focus_el.focus({ preventScroll: true, focusVisble: false });
             that.img.setPointerCapture(e.pointerId);
             that._pointers[e.pointerId] = e;
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_down');
