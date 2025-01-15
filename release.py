@@ -6,7 +6,7 @@ Usage:
 
 This script will then:
 
-    * Update _version.py with the specified version.
+    * Update all files that contain the version number.
     * Show a diff and ask for confirmation.
     * Commit the change, and tag that commit.
     * Git push main and the new tag.
@@ -15,42 +15,25 @@ This script will then:
     * Push these to Pypi.
 """
 
-# Original release description produced by the jupyter-widget cookie-cutter:
-#
-# - To release a new version of jupyter_rfb on PyPI:
-#
-# Update _version.py (set release version, remove 'dev')
-# git add the _version.py file and git commit
-# `python setup.py sdist upload`
-# `python setup.py bdist_wheel upload`
-# `git tag -a X.X.X -m 'comment'`
-# Update _version.py (add 'dev' and increment minor)
-# git add and git commit
-# git push
-# git push --tags
-#
-# - To release a new version of jupyter_rfb on NPM:
-#
-# Update `js/package.json` with new npm package version
-#
-# ```
-# # clean out the `dist` and `node_modules` directories
-# git clean -fdx
-# npm install
-# npm publish
-# ```
-
-import importlib
 import os
-import shutil
-import subprocess
+import re
 import sys
+import shutil
+import importlib
+import subprocess
+
 
 NAME = "jupyter_rfb"
 LIBNAME = NAME.replace("-", "_")
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if not os.path.isdir(os.path.join(ROOT_DIR, LIBNAME)):
     sys.exit("package NAME seems to be incorrect.")
+
+
+finder = re.compile(
+    r"^ *((__version__)|(version)|(\"version\")|(export const version))\s*(\=|\:)\s*[\"\']([\d\.]+)[\"\']",
+    re.MULTILINE,
+)
 
 
 def release(version):
@@ -67,7 +50,7 @@ def release(version):
     else:
         tag_name = ".".join(str(part) for part in version_info)
     # Check that we're not missing any libraries
-    for x in ("setuptools", "twine", "jupyter_packaging"):
+    for x in ["build", "hatchling", "twine"]:
         try:
             importlib.import_module(x)
         except ImportError:
@@ -82,27 +65,36 @@ def release(version):
         print("\n".join(lines))
         return
     # Get the version definition
-    filename = os.path.join(ROOT_DIR, LIBNAME, "_version.py")
-    with open(filename, "rb") as f:
-        lines = f.read().decode().splitlines()
-    line_index = -1
-    for i, line in enumerate(lines):
-        if line.startswith("version_info = "):
-            line_index = i
-            break
-    else:
-        raise ValueError("Could not find version definition")
-    # Only show the version?
+    only_show_version = False
     if not version.strip("x-"):
         print(__doc__)
-        print("The current version is:\n")
-        print("    " + lines[line_index])
+        only_show_version = True
+
+    for filename in [
+        os.path.join(ROOT_DIR, "pyproject.toml"),
+        os.path.join(ROOT_DIR, LIBNAME, "_version.py"),
+        os.path.join(ROOT_DIR, "js", "package.json"),
+        os.path.join(ROOT_DIR, "js", "lib", "index.js"),
+    ]:
+        fname = os.path.basename(filename)
+        with open(filename, "rb") as f:
+            text = f.read().decode()
+        m = finder.search(text)
+        if not m:
+            raise ValueError(f"Could not find version definition in {filename}")
+        lastgroup = len(m.groups())
+        if only_show_version:
+            print(
+                f"The current version in {fname.ljust(16)}: {m.group(lastgroup)}  -> {m.group(0)}"
+            )
+        else:
+            # Apply changse
+            i1, i2 = m.start(lastgroup), m.end(lastgroup)
+            text = text[:i1] + version + text[i2:]
+            with open(filename, "wb") as f:
+                f.write(text.encode())
+    if only_show_version:
         return
-    # Apply change
-    version_info_repr = repr(version_info).replace("'", '"')
-    lines[line_index] = lines[line_index].split("=")[0] + "= " + version_info_repr
-    with open(filename, "wb") as f:
-        f.write(("\n".join(lines).strip() + "\n").encode())
     # Ask confirmation
     subprocess.run(["git", "diff"])
     while True:
@@ -125,7 +117,8 @@ def release(version):
     dist_dir = os.path.join(ROOT_DIR, "dist")
     if os.path.isdir(dist_dir):
         shutil.rmtree(dist_dir)
-    subprocess.run([sys.executable, "setup.py", "sdist", "bdist_wheel"])
+    subprocess.run([sys.executable, "-m", "build", "-n", "-w"])
+    subprocess.run([sys.executable, "-m", "build", "-n", "-s"])
     subprocess.run([sys.executable, "-m", "twine", "upload", dist_dir + "/*"])
     # Bye bye
     print("Success!")
