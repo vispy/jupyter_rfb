@@ -24,7 +24,7 @@ For a development installation (requires Node.js and Yarn):
 
     $ git clone https://github.com/vispy/jupyter_rfb.git
     $ cd jupyter_rfb
-    $ pip install -e .
+    $ pip install -e .[dev]
     $ jupyter nbextension install --py --symlink --overwrite --sys-prefix jupyter_rfb
     $ jupyter nbextension enable --py --sys-prefix jupyter_rfb
 
@@ -43,20 +43,6 @@ Then you need to rebuild the JS when you make a code change:
 
 You then need to refresh the JupyterLab page when your javascript changes.
 
-
-Install developer tools
------------------------
-
-.. code-block::
-
-    $ pip install ruff pytest
-
-Install dependencies required for tests
----------------------------------------
-
-.. code-block::
-
-   $ pip install pillow simplejpeg
 
 Automated tools
 ---------------
@@ -77,3 +63,12 @@ Optionally, you can setup an autocommit hook to automatically run these on each 
 
     $ pip install pre-commit
     $ pre-commit install
+
+
+Tips to test changes made to code
+---------------------------------
+
+In general you should not have to restart the server when working on the code of jupyter_rfb:
+
+* When Python code has changed: restart and clear all outputs.
+* When the JavaScript code has changed: rebuild with yarn, and then refresh (F5) the page.
