@@ -107,22 +107,23 @@ def release(version):
             return
     # Git
     print("Git commit and tag")
-    subprocess.run(["git", "add", filename])
+    subprocess.run(["git", "add", "."])
     subprocess.run(["git", "commit", "-m", f"Bump version to {tag_name}"])
     subprocess.run(["git", "tag", f"v{tag_name}"])
     print(f"git push origin main v{tag_name}")
-    subprocess.run(["git", "push", "origin", "main", f"v{tag_name}"])
+    subprocess.check_call(["git", "push", "origin", "main", f"v{tag_name}"])
     # Pypi
     input("\nHit enter to upload to pypi: ")
     dist_dir = os.path.join(ROOT_DIR, "dist")
     if os.path.isdir(dist_dir):
         shutil.rmtree(dist_dir)
-    subprocess.run([sys.executable, "-m", "build", "-n", "-w"])
-    subprocess.run([sys.executable, "-m", "build", "-n", "-s"])
-    subprocess.run([sys.executable, "-m", "twine", "upload", dist_dir + "/*"])
+    subprocess.check_call([sys.executable, "-m", "build", "-n", "-w"])
+    subprocess.check_call([sys.executable, "-m", "build", "-n", "-s"])
+
+    subprocess.check_call([sys.executable, "-m", "twine", "upload", dist_dir + "/*"])
     # Bye bye
-    print("Success!")
-    print("Don't forget to write release notes!")
+    print("Done!")
+    print("Don't forget to write release notes, and check pypi!")
 
 
 if __name__ == "__main__":
