@@ -22,7 +22,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Multimedia :: Graphics",
 ]
-dependencies = ["ipywidgets>=7.6.0,<9", "jupyterlab-widgets", "numpy"]
+dependencies = ["ipywidgets>=7.6.0,<9", "numpy"]
 [project.optional-dependencies]
 build = ["build", "hatchling", "hatch-jupyter-builder", "twine"]
 lint = ["ruff", "pre-commit"]
