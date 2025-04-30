@@ -177,6 +177,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
     // Defines how the widget gets rendered into the DOM
     render() {
         var that = this;
+        console.log("We cooking now bro")
 
         // Create a stub element that can grab focus
         this.focus_el = document.createElement("a");
@@ -263,6 +264,16 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             }
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_move');
             that.send_throttled(event, 20);
+        });
+        this.img.addEventListener('pointerenter', function (e) {
+            // TODO: Do we want to edit this._pointers?
+            let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_enter');
+            that.send(event);
+        });
+        this.img.addEventListener('pointerleave', function (e) {
+            // TODO: Do we want to edit this._pointers?
+            let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_leave');
+            that.send(event);
         });
 
         // Click events are not pointer events. Not sure if we need click events. It seems to make
