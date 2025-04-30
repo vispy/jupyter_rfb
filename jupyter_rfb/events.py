@@ -40,6 +40,14 @@ Event types
   This event has the same keys as the pointer down event.
   This event is throttled.
 
+* **pointer_enter**: emitted when the user moves a pointer into the
+  boundary of the widget.
+  This event has no additional keys.
+
+* **pointer_leave**: emitted when the user moves a pointer out of the
+  boundary of the widget.
+  This event has no additional keys.
+
 * **double_click**: emitted on a double-click.
   This event looks like a pointer event, but without the touches.
 
