@@ -177,7 +177,6 @@ export class RemoteFrameBufferView extends DOMWidgetView {
     // Defines how the widget gets rendered into the DOM
     render() {
         var that = this;
-        console.log("We cooking now bro")
 
         // Create a stub element that can grab focus
         this.focus_el = document.createElement("a");
