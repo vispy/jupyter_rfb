@@ -265,12 +265,18 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             that.send_throttled(event, 20);
         });
         this.img.addEventListener('pointerenter', function (e) {
-            // TODO: Do we want to edit this._pointers?
+            // If this pointer is not down, but other pointers are, don't emit an event.
+            if (that._pointers[e.pointerId] === undefined) {
+                if (Object.keys(that._pointers).length > 0) { return; }
+            }
             let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_enter');
             that.send(event);
         });
         this.img.addEventListener('pointerleave', function (e) {
-            // TODO: Do we want to edit this._pointers?
+            // If this pointer is not down, but other pointers are, don't emit an event.
+            if (that._pointers[e.pointerId] === undefined) {
+                if (Object.keys(that._pointers).length > 0) { return; }
+            }
             let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_leave');
             that.send(event);
         });
