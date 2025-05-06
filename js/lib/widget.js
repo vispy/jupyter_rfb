@@ -18,7 +18,7 @@ import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base';
 * this on FF, the animation is not smooth because the image "gets stuck".
 */
 
-export const version = "0.5.1";
+export const version = "0.5.2";
 
 export class RemoteFrameBufferModel extends DOMWidgetModel {
     defaults() {

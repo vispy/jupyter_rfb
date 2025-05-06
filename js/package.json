@@ -1,6 +1,6 @@
 {
   "name": "jupyter_rfb",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Remote Frame Buffer for Jupyter",
   "license": "MIT",
   "author": "Almar Klein",
