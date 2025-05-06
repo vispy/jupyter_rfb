@@ -264,6 +264,22 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             let event = create_pointer_event(that.img, e, that._pointers, 'pointer_move');
             that.send_throttled(event, 20);
         });
+        this.img.addEventListener('pointerenter', function (e) {
+            // If this pointer is not down, but other pointers are, don't emit an event.
+            if (that._pointers[e.pointerId] === undefined) {
+                if (Object.keys(that._pointers).length > 0) { return; }
+            }
+            let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_enter');
+            that.send(event);
+        });
+        this.img.addEventListener('pointerleave', function (e) {
+            // If this pointer is not down, but other pointers are, don't emit an event.
+            if (that._pointers[e.pointerId] === undefined) {
+                if (Object.keys(that._pointers).length > 0) { return; }
+            }
+            let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_leave');
+            that.send(event);
+        });
 
         // Click events are not pointer events. Not sure if we need click events. It seems to make
         // less sense, because the img is just a single element. Only double-click for now.
