@@ -4,7 +4,7 @@ This spec specifies the events that are passed to the widget's
 Events are simple dict objects containing at least the key `event_type`.
 Additional keys provide more information regarding the event.
 
-*Last update: 24-10-2023*
+*Last update: 09-05-2025*
 
 Event types
 -----------
@@ -125,9 +125,27 @@ Positive `x` moves to the right, positive `y` moves down.
 Event capturing
 ---------------
 
-Since jupyter_rfb represents a widget in the browser, some events only
-work when it has focus  (having received a pointer down). This applies
-to the *key_down*, *key_up*, and *wheel* events.
+The *pointer_move* event only occurs when the pointer is over the widget,
+unless a button is down (i.e. dragging). The *pointer_down* event can only
+occur inside the widget, the *pointer_up* can occur outside of the widget.
+
+Some events only work when the widget has focus within the application
+(i.e. having received a pointer down).
+This applies to the *key_down*, *key_up*, and *wheel* events.
+
+
+Application focus
+-----------------
+
+(In the case of ``jupyter_rfb``, the 'application' typically means the browser.)
+
+* When the application does not have focus, it does not emit any pointer events.
+* When the application loses focus, a *pointer_leave* event is emitted, and
+  also a *pointer_up* event if a button is currently down.
+* When the application regains focus, an enter event is emitted if the pointer
+  if over the canvas. This not may happen until the pointer is moved.
+* If the application regained focus by clicking on the canvas, that click does
+  not result in pointer events (down, move, nor up).
 
 
 Event throttling
