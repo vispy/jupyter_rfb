@@ -84,6 +84,14 @@ Event types
 * **key_up**: emitted when a key is released.
   This event has the same keys as the key down event.
 
+* **char**: emitted when a character is typed.
+  An experimental event to support text-editing. The spec for this event will likely change in the future.
+
+    * *data*: the Unicode character being typed.
+    * *input_type*: the typing action, e.g. 'insertText', 'insertCompositionText', 'deleteBackwards'.
+    * *is_composing*: whether the insertex text is being composited (i.e. temporary).
+    * *repeat*: whether this is a repeated event from a key being held down.
+
 
 Time stamps
 -----------
@@ -113,6 +121,12 @@ The key names follow the `browser spec <https://developer.mozilla.org/en-US/docs
   "Shift", "Control", "Alt", "Meta".
 * Some example keys that do not represent a character:
   "ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "F1", "Backspace", etc.
+* When a key is held down, the events should *not* repeat.
+
+
+Char
+----
+
 
 
 Coordinate frame

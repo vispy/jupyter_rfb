@@ -178,9 +178,11 @@ export class RemoteFrameBufferView extends DOMWidgetView {
     render() {
         var that = this;
 
-        // Create a stub element that can grab focus
-        this.focus_el = document.createElement("a");
-        this.focus_el.href = "#";
+        // Create a stub element that can grab focus.
+        // By making it a text input element, it properly captures the keys, without the notebook triggering shortcuts for e.g. "a" or "d".
+        this.focus_el = document.createElement("input");
+        this.focus_el.tabIndex = -1;
+        this.focus_el.type = "text";
         this.focus_el.style.position = "absolute";
         this.focus_el.style.width = "1px";
         this.focus_el.style.height = "1px";
@@ -269,7 +271,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             if (that._pointers[e.pointerId] === undefined) {
                 if (Object.keys(that._pointers).length > 0) { return; }
             }
-            let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_enter');
+            let event = create_pointer_event(that.img, e, { [e.pointerId]: e }, 'pointer_enter');
             that.send(event);
         });
         this.img.addEventListener('pointerleave', function (e) {
@@ -277,7 +279,7 @@ export class RemoteFrameBufferView extends DOMWidgetView {
             if (that._pointers[e.pointerId] === undefined) {
                 if (Object.keys(that._pointers).length > 0) { return; }
             }
-            let event = create_pointer_event(that.img, e, {[e.pointerId]:  e}, 'pointer_leave');
+            let event = create_pointer_event(that.img, e, { [e.pointerId]: e }, 'pointer_leave');
             that.send(event);
         });
 
@@ -337,12 +339,44 @@ export class RemoteFrameBufferView extends DOMWidgetView {
                 modifiers: get_modifiers(e),
                 time_stamp: get_time_stamp(),
             };
-            if (!e.repeat) { that.send(event); } // dont do the sticky key thing
-            e.stopPropagation();
-            e.preventDefault();
+            // Emit these events for the non-repeated only
+            if (!e.repeat) { that.send(event); }
+            // No need for stopPropagation or preventDefault because we are in a text-input.
+
+            // NOTE: to allow text-editing functionality *inside* a framebuffer, e.g. via imgui or something similar,
+            // we need events like arrow keys, backspace, and delete, with modifiers, and with repeat.
+            // I think it makes sense to send these like the code below, but this needs more thought ...
+            // if (event.key == "Backspace") {
+            //     let char_event = {
+            //         event_type: 'char',
+            //         data: null,
+            //         is_composing: false,
+            //         input_type: "deleteBackwards",
+            //         repeat: e.repeat,
+            //         time_stamp: get_time_stamp(),
+            //     };
+            //     that.send(char_event);
+            // }
+        }
+        function char_event_handler(e) {
+            // Failsafe in case the element is deleted or detached.
+            if (that.el.offsetParent === null) { return; }
+            let event = {
+                event_type: 'char',
+                data: e.data,
+                is_composing: e.isComposing,
+                input_type: e.inputType,
+                repeat: e.repeat,
+                time_stamp: get_time_stamp(),
+            };
+            that.send(event);
+            if (!e.isComposing) {
+                that.focus_el.value = "";  // Prevent the text box from growing
+            }
         }
         this.focus_el.addEventListener('keydown', key_event_handler, true);
         this.focus_el.addEventListener('keyup', key_event_handler, true);
+        this.focus_el.addEventListener('input', char_event_handler, true);
     }
 
     remove() {
