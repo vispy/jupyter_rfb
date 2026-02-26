@@ -1,8 +1,5 @@
-import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base';
-
 /*
 * For the kernel counterpart to this file, see widget.py
-* For the base class, see https://github.com/jupyter-widgets/ipywidgets/blob/master/packages/base/src/widget.ts
 *
 * The server sends frames to the client, and the client sends back
 * a confirmation when it has processed the frame.
@@ -18,38 +15,22 @@ import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base';
 * this on FF, the animation is not smooth because the image "gets stuck".
 */
 
-export const version = "0.5.4";
+class RemoteFrameBufferModel {
+    #model;
+    #views;
 
-export class RemoteFrameBufferModel extends DOMWidgetModel {
-    defaults() {
-        return {
-            ...super.defaults(),
-            _model_name: 'RemoteFrameBufferModel',
-            _view_name: 'RemoteFrameBufferView',
-            _model_module: 'jupyter_rfb',
-            _view_module: 'jupyter_rfb',
-            _model_module_version: version,
-            _view_module_version: version,
-            // For the frames
-            frame_feedback: {},
-            // For the widget
-            css_width: '500px',
-            css_height: '300px',
-            resizable: true,
-            has_visible_views: false,
-            cursor: 'default'
-        };
-    }
-    initialize() {
-        super.initialize.apply(this, arguments);
-        // Keep a list if img elements.
+    constructor({ model, views }) {
+        this.#model = model;
+        this.#views = views;
+
+        // Keep a list of img elements.
         this.img_elements = [];
         // Observer that will check whether the img elements are within the viewport.
         this._intersection_observer = new IntersectionObserver(this._intersection_callback.bind(this));
         // We update the img element list (and the intersection observer) automatically when
         // a new view is added or removed. But this (especially the latter) may not work in
         // all possible cases. So let's also call it on a low interval.
-        window.setInterval(this.collect_view_img_elements.bind(this), 5000);
+        this._interval = window.setInterval(this.collect_view_img_elements.bind(this), 5000);
         // Keep a list of frames to render.
         this.frames = [];
         // We populate the above list from this callback.
@@ -65,10 +46,27 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         this._request_animation_frame();
     }
 
-    async collect_view_img_elements() {
+    // Proxy methods
+    get(name) {
+        return this.#model.get(name);
+    }
+    set(name, val) {
+        this.#model.set(name, val);
+    }
+    save_changes() {
+        this.#model.save_changes();
+    }
+    on(event, cb, ctx) {
+        this.#model.on(event, cb, ctx);
+    }
+    send(msg) {
+        this.#model.send(msg);
+    }
+
+    collect_view_img_elements() {
         // Here we collect img elements corresponding to the current views.
         // We also set their onload methods which we use to schedule new draws.
-        // Plus we reset out visibility obserer.
+        // Plus we reset our visibility observer.
         this._intersection_observer.disconnect();
         // Reset
         for (let img of this.img_elements) {
@@ -76,8 +74,7 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
         }
         this.img_elements = [];
         // Collect
-        for (let view_id in this.views) {
-            let view = await this.views[view_id];
+        for (let view of this.#views) {
             this._intersection_observer.observe(view.img);
             this.img_elements.push(view.img);
             view.img.onload = this._request_animation_frame.bind(this);
@@ -167,13 +164,23 @@ export class RemoteFrameBufferModel extends DOMWidgetModel {
 
     close() {
         // This gets called when model is closed and the comm is removed. Notify Py just in time!
-        this.send({ event_type: 'close', time_stamp: get_time_stamp() }); // does nothing if this.comm is already gone
-        super.close.apply(this, arguments);
+        this.send({ event_type: 'close', time_stamp: get_time_stamp() });
+        window.clearInterval(this._interval);
+        this._intersection_observer.disconnect();
     }
 }
 
 
-export class RemoteFrameBufferView extends DOMWidgetView {
+class RemoteFrameBufferView {
+    constructor({ model, el }) {
+        this.model = model;
+        this.el = el;
+    }
+
+    send(msg) {
+        this.model.send(msg);
+    }
+
     // Defines how the widget gets rendered into the DOM
     render() {
         var that = this;
@@ -381,7 +388,6 @@ export class RemoteFrameBufferView extends DOMWidgetView {
 
     remove() {
         // This gets called when the view is removed from the DOM. There can still be other views though!
-        super.remove.apply(this, arguments);
         window.setTimeout(this.model.collect_view_img_elements.bind(this.model), 10);
     }
 
@@ -504,3 +510,24 @@ function create_pointer_event(el, e, pointers, event_type) {
 function get_time_stamp() {
     return Date.now() / 1000;
 }
+
+// anywidget lifecycle export
+export default () => {
+    let model;
+    let views = [];
+    return {
+        initialize(ctx) {
+            model = new RemoteFrameBufferModel({ model: ctx.model, views });
+            return () => model.dispose();
+        },
+        render(ctx) {
+            const view = new RemoteFrameBufferView({ model, el: ctx.el });
+            view.render();
+            views.push(view);
+            return () => {
+                view.remove();
+                views = views.filter(v => v !== view);
+            };
+        }
+    };
+};

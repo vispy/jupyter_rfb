@@ -16,17 +16,17 @@ import asyncio
 import time
 from base64 import encodebytes
 
-import ipywidgets
+import pathlib
+
+import anywidget
 import numpy as np
 from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
 from ._utils import array2compressed, RFBOutputContext, Snapshot
-from ._version import ref_version
 
 
-@ipywidgets.register
-class RemoteFrameBuffer(ipywidgets.DOMWidget):
+class RemoteFrameBuffer(anywidget.AnyWidget):
     """A widget implementing a remote frame buffer.
 
     This is a subclass of `ipywidgets.DOMWidget <https://ipywidgets.readthedocs.io>`_.
@@ -53,22 +53,7 @@ class RemoteFrameBuffer(ipywidgets.DOMWidget):
 
     """
 
-    # Name of the widget view class in front-end
-    _view_name = Unicode("RemoteFrameBufferView").tag(sync=True)
-
-    # Name of the widget model class in front-end
-    _model_name = Unicode("RemoteFrameBufferModel").tag(sync=True)
-
-    # Name of the front-end module containing widget view
-    _view_module = Unicode("jupyter_rfb").tag(sync=True)
-
-    # Name of the front-end module containing widget model
-    _model_module = Unicode("jupyter_rfb").tag(sync=True)
-
-    # Version of the front-end module containing widget view
-    _view_module_version = Unicode(f"^{ref_version}").tag(sync=True)
-    # Version of the front-end module containing widget model
-    _model_module_version = Unicode(f"^{ref_version}").tag(sync=True)
+    _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
 
     # Widget specific traits
     frame_feedback = Dict({}).tag(sync=True)
