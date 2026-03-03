@@ -7,10 +7,17 @@ tests are pretty complete to test the Python-side logic.
 import time
 
 import numpy as np
+import pytest
 from pytest import raises
 from jupyter_rfb import RemoteFrameBuffer
 from jupyter_rfb._utils import Snapshot
 from traitlets import TraitError
+
+
+try:
+    import simplejpeg
+except ImportError:
+    simplejpeg = None
 
 
 class MyRFB(RemoteFrameBuffer):
@@ -317,7 +324,8 @@ def test_use_websocket():
     msg = w.msgs[-1]
     assert len(msg["buffers"]) == 0
     assert isinstance(msg["data_b64"], str)
-    assert msg["data_b64"].startswith("data:image/jpeg;base64,")
+    if simplejpeg:
+        assert msg["data_b64"].startswith("data:image/jpeg;base64,")
 
     # Turn it back on
     w._use_websocket = True
