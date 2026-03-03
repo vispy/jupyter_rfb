@@ -26,7 +26,7 @@ dependencies = ["anywidget", "numpy"]
 [project.optional-dependencies]
 build = ["build", "hatchling", "twine"]
 lint = ["ruff", "pre-commit"]
-tests = ["pytest", "simplejpeg"]
+tests = ["pytest", "simplejpeg; implementation_name != 'pypy'"]
 docs = ["numpy", "anywidget", "sphinx", "nbsphinx"]
 dev = ["jupyter_rfb[build,lint,tests,docs]"]
 

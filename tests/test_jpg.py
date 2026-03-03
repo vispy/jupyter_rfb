@@ -20,6 +20,7 @@ def get_random_im(*shape):
 
 def test_array2jpg():
     """Tests for array2jpg function."""
+    pytest.importorskip("simplejpeg")
 
     im = get_random_im(100, 100, 3)
     bb1 = array2jpg(im)  # has default quality
@@ -116,6 +117,7 @@ def raise_importerror():
 
 def test_select_encoder():
     """Test the JPEG encoder selection mechanism."""
+    pytest.importorskip("simplejpeg")
 
     encoder = select_encoder()
     assert isinstance(encoder, (SimpleJpegEncoder, PillowJpegEncoder))

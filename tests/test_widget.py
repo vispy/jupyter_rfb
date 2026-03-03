@@ -13,6 +13,12 @@ from jupyter_rfb._utils import Snapshot
 from traitlets import TraitError
 
 
+try:
+    import simplejpeg
+except ImportError:
+    simplejpeg = None
+
+
 class MyRFB(RemoteFrameBuffer):
     """RFB class to use in the tests."""
 
@@ -317,7 +323,8 @@ def test_use_websocket():
     msg = w.msgs[-1]
     assert len(msg["buffers"]) == 0
     assert isinstance(msg["data_b64"], str)
-    assert msg["data_b64"].startswith("data:image/jpeg;base64,")
+    if simplejpeg:
+        assert msg["data_b64"].startswith("data:image/jpeg;base64,")
 
     # Turn it back on
     w._use_websocket = True
