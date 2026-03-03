@@ -7,7 +7,6 @@ tests are pretty complete to test the Python-side logic.
 import time
 
 import numpy as np
-import pytest
 from pytest import raises
 from jupyter_rfb import RemoteFrameBuffer
 from jupyter_rfb._utils import Snapshot
