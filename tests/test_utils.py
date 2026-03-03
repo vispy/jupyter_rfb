@@ -1,5 +1,6 @@
 """Test the things in the utils module."""
 
+import pytest
 import numpy as np
 from jupyter_rfb._utils import array2compressed, RFBOutputContext, Snapshot
 from jupyter_rfb import _jpg
@@ -7,6 +8,8 @@ from jupyter_rfb import _jpg
 
 def test_array2compressed():
     """Test the array2compressed function."""
+
+    pytest.importorskip("simplejpeg")
 
     # This test assumes that a JPEG encoder is available
 
