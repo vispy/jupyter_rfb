@@ -76,10 +76,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyversion }}
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
       - name: Install dependencies
         shell: bash
         run: |
