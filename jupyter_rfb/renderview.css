@@ -1,3 +1,11 @@
+/*************************************************************************************************
+  renderview.css
+
+  This file is dedicated to the public domain under CC0 1.0.
+  This file is developed at https://github.com/pygfx/renderview, please contribute changes there.
+
+ *************************************************************************************************/
+
 div.renderview-wrapper {
     display: inline-block;
     position: relative;
@@ -15,6 +23,10 @@ div.renderview-wrapper canvas {
     height: 100%;
     border-radius: 6px;
     background: #777;
+}
+
+div.renderview-wrapper div.renderview-hidden {
+    display: none;
 }
 
 div.renderview-wrapper div.renderview-top {

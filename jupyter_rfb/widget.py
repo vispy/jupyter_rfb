@@ -115,16 +115,16 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
         anywidget.AnyWidget.close(self, *args, **kwargs)
-        self._rfb_handle_msg(self, {"event_type": "close"}, [])
+        self._rfb_handle_msg(self, {"type": "close", "event_type": "close"}, [])
 
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
-        if "event_type" in content:
+        if "type" in content:
             # We have some builtin handling
-            if content["event_type"] == "resize":
+            if content["type"] == "resize":
                 self._rfb_last_resize_event = content
                 self.request_draw()
-            elif content["event_type"] == "close":
+            elif content["type"] == "close":
                 self._repr_mimebundle_ = None
             # Turn lists into tuples (js/json does not have tuples)
             if "buttons" in content:
@@ -164,9 +164,13 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # If the new pixel ratio is different from "native", we need to resize first
         if new_pixel_ratio:
             evt = {
+                "type": "resize",
                 "event_type": "resize",
                 "width": w,
                 "height": h,
+                "pwidth": int(w * new_pixel_ratio),
+                "pheight": int(h * new_pixel_ratio),
+                "pixelratio": new_pixel_ratio,
                 "pixel_ratio": new_pixel_ratio,
             }
             self.handle_event(evt)
@@ -376,6 +380,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
         Subclasses should overload this method. Events include widget resize,
         mouse/touch interaction, key events, and more. An event is a dict with at least
-        the key *event_type*. See :mod:`jupyter_rfb.events` for details.
+        the key *type*. See :mod:`jupyter_rfb.events` for details.
         """
         pass

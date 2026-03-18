@@ -79,10 +79,13 @@ class RendercanvasAnywidgetModel {
     for (const view of this.views) {
       view.close()
     }
-    // This gets called when model is closed and the comm is removed. Notify Py just in time!
+    // This gets called when the model is closed and the comm is removed. Notify Py just in time!
+    const t = getTimestamp()
     const event = {
+      type: 'close',
+      timestamp: t,
       event_type: 'close',
-      time_stamp: getTimestamp()
+      times_tamp: t
     }
     this.onEvent(event)
   }
@@ -212,27 +215,25 @@ class AnywidgetRenderView extends BaseRenderView {
     this.model.removeView(this)
   }
 
-  onVisibleChanged (visible) {
-    this.isVisible = visible
-    this.model.updateVisibility()
-  }
-
-  onResize (physicalWidth, physicalHeight, pixelRatio) {
-    const event = {
-      event_type: 'resize',
-      width: physicalWidth / pixelRatio,
-      height: physicalHeight / pixelRatio,
-      pwidth: physicalWidth,
-      pheight: physicalHeight,
-      pixel_ratio: pixelRatio,
-      time_stamp: getTimestamp()
-    }
-    // Note that there can be multiple views that can possibly be individually resized.
-    // TODO: keep logical size in check between different views?
-    this.onEvent(event)
-  }
-
   onEvent (event) {
+    if (event.type === 'resize') {
+      // Note that there can be multiple views that can possibly be individually resized.
+      // TODO: keep logical size in check between different views?
+      event.pixel_ratio = event.pixelratio
+    } else if (event.type === 'close') {
+      return // we don't close when one view closes, only when the widget closes
+    } else if (event.type === 'show') {
+      this.isVisible = true
+      this.model.updateVisibility()
+    } else if (event.type === 'hide') {
+      this.isVisible = false
+      this.model.updateVisibility()
+    }
+
+    // Backwards compat with previous jupyter_rfb event spec
+    event.event_type = event.type
+    event.time_stamp = event.timestamp
+
     this.model.onEvent(event)
   }
 }
