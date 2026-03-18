@@ -10,7 +10,7 @@ on:
 jobs:
 
   lint:
-    name: Lint
+    name: Py linting
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,6 +30,19 @@ jobs:
       - name: Ruff format
         run: |
              ruff format --check .
+
+  jslint:
+    name: JS Linting
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v6
+    - name: Install JS dependencies
+      run: npm install -g standard
+    - name: Lint JS files
+      run: standard jupyter_rfb
 
   tests:
     name: ${{ matrix.name }}
