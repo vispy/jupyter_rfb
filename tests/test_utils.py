@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from jupyter_rfb._utils import array2compressed, RFBOutputContext, Snapshot
+from jupyter_rfb._utils import array2compressed, Snapshot
 from jupyter_rfb import _jpg
 
 
@@ -60,59 +60,6 @@ def test_array2compressed():
     # Should be back to normal now
     preamble, bb = array2compressed(im)
     assert "jpeg" in preamble and "png" not in preamble
-
-
-class StubRFBOutputContext(RFBOutputContext):
-    """A helper class for these tests."""
-
-    def __init__(self):
-        super().__init__()
-        self.stdouts = []
-        self.stderrs = []
-
-    def append_stdout(self, msg):
-        """Overloaded method."""
-        self.stdouts.append(msg)
-
-    def append_stderr(self, msg):
-        """Overloaded method."""
-        self.stderrs.append(msg)
-
-
-def test_output_context():
-    """Test the RFBOutputContext class."""
-
-    c = StubRFBOutputContext()
-
-    # The context captures errors and sends tracebacks to its "stdout stream"
-    with c:
-        1 / 0  # noqa
-    assert len(c.stderrs) == 1
-    assert "Traceback" in c.stderrs[0]
-    assert "ZeroDivisionError" in c.stderrs[0]
-
-    # By default it does not capture prints
-    with c:
-        print("aa")
-    assert len(c.stdouts) == 0
-
-    # But we can turn that on
-    c.capture_print = True
-    print("aa")
-    with c:
-        print("bb")
-        print("cc")
-    print("dd")
-    c.capture_print = False
-    with c:
-        print("ee")
-    assert len(c.stdouts) == 2
-    assert c.stdouts[0] == "bb\n"
-    assert c.stdouts[1] == "cc\n"
-
-    # The print is a proper print
-    c.print("foo", "bar", sep="-", end=".")
-    assert c.stdouts[-1] == "foo-bar."
 
 
 def test_snapshot():

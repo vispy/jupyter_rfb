@@ -198,13 +198,16 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # many frames in-flight. But in this case, we'll eventually get
         # new frame_feedback, which will then trigger a draw.
         if not self._rfb_draw_requested:
-            self._rfb_draw_requested = True
             self._rfb_cancel_lossless_draw()
             self._rfb_schedule_maybe_draw()
 
     def _rfb_schedule_maybe_draw(self, *args):
         """Schedule _maybe_draw() to be called in a fresh event loop iteration."""
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._rfb_draw_requested = True
         loop.call_soon(self._rfb_maybe_draw)
 
     def _rfb_maybe_draw(self):
@@ -229,7 +232,10 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     def _rfb_schedule_lossless_draw(self, array, delay=0.3):
         self._rfb_cancel_lossless_draw()
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
         handle = loop.call_later(delay, self._rfb_lossless_draw)
         self._rfb_lossless_draw_info = array, handle
 

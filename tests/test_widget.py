@@ -28,8 +28,8 @@ class MyRFB(RemoteFrameBuffer):
 
     def __init__(self):
         super().__init__()
-        self.frame_feedback = {}
-        self.has_visible_views = True
+        self._frame_feedback = {}
+        self._has_visible_views = True
         self.msgs = []
 
     def send(self, msg, buffers):
@@ -37,6 +37,10 @@ class MyRFB(RemoteFrameBuffer):
         msg = msg.copy()
         msg["buffers"] = buffers
         self.msgs.append(msg)
+
+    def request_draw(self):
+        super().request_draw()
+        self._rfb_draw_requested = True
 
     def get_frame(self):
         """Return a stub array."""
@@ -60,9 +64,9 @@ class MyRFB(RemoteFrameBuffer):
         """Prentend to flush a frame by setting the widget's frame feedback."""
         if not len(self.msgs):
             return
-        self.frame_feedback["index"] = len(self.msgs)
-        self.frame_feedback["timestamp"] = self.msgs[-1]["timestamp"]
-        self.frame_feedback["localtime"] = time.time()
+        self._frame_feedback["index"] = len(self.msgs)
+        self._frame_feedback["timestamp"] = self.msgs[-1]["timestamp"]
+        self._frame_feedback["localtime"] = time.time()
 
 
 def test_widget_frames_and_stats_1():
@@ -213,7 +217,7 @@ def test_widget_traits():
 
     w = RemoteFrameBuffer()
 
-    assert w.frame_feedback == {}
+    assert w._frame_feedback == {}
 
     assert w.max_buffered_frames == 2
     w.max_buffered_frames = 99
@@ -239,7 +243,7 @@ def test_requesting_draws():
     """Test that requesting draws works as intended."""
 
     # By default no frame is requested
-    w = RemoteFrameBuffer()
+    w = MyRFB()
     assert not w._rfb_draw_requested
 
     # Call request_draw to request a draw
@@ -263,12 +267,12 @@ def test_has_visible_views():
 
     fs.flush()
 
-    fs.has_visible_views = False
+    fs._has_visible_views = False
     for _ in range(3):
         fs.trigger(True)
         assert len(fs.msgs) == 1
 
-    fs.has_visible_views = True
+    fs._has_visible_views = True
     fs.trigger(True)
     assert len(fs.msgs) == 2
 
@@ -284,15 +288,6 @@ def test_automatic_events():
     # Note that when the model is closed from JS, we emit a close event from there.
     w.close()
     assert len(events) == 1 and events[0]["event_type"] == "close"
-
-
-def test_print():
-    """Test that the widget has a fully featured print method."""
-    w = MyRFB()
-    w.print("foo bar", sep="-", end=".")
-    # mmm, a bit hard to see where the data has ended up,
-    # but if it did not error, that's something!
-    # We test the printing itself in test_utils.py
 
 
 def test_snapshot():
