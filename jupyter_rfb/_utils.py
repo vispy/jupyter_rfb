@@ -1,10 +1,7 @@
-import io
 import builtins
-import traceback
 from base64 import encodebytes
 
 from IPython.display import DisplayObject
-import ipywidgets
 
 from ._png import array2png
 from ._jpg import array2jpg
