@@ -1,7 +1,5 @@
 """
 
-See widget.js for the client counterpart to this file.
-
 ## Developer notes
 
 The server sends frames to the client, and the client sends back
@@ -15,15 +13,27 @@ the server will slow down too.
 import asyncio
 import time
 from base64 import encodebytes
-
-import pathlib
+from importlib.resources import files as resource_files
 
 import anywidget
 import numpy as np
-from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
-from ._utils import array2compressed, RFBOutputContext, Snapshot
+from ._utils import array2compressed, Snapshot
+
+
+def _load_js_and_css():
+    js = ""
+    for fname in ["renderview.js", "renderview-rfb.js"]:
+        js_path = resource_files("jupyter_rfb").joinpath(fname)
+        js += js_path.read_text() + "\n\n"
+
+    css_path = resource_files("jupyter_rfb").joinpath("renderview.css")
+
+    return js, css_path.read_text()
+
+
+JS, CSS = _load_js_and_css()
 
 
 class RemoteFrameBuffer(anywidget.AnyWidget):
@@ -53,11 +63,12 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     """
 
-    _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
+    _esm = JS
+    _css = CSS
 
     # Widget specific traits
-    frame_feedback = Dict({}).tag(sync=True)
-    has_visible_views = Bool(False).tag(sync=True)
+    _frame_feedback = Dict({}).tag(sync=True)
+    _has_visible_views = Bool(False).tag(sync=True)
     max_buffered_frames = Int(2, min=1)
     quality = Int(80, min=1, max=100)
     css_width = Unicode("500px").tag(sync=True)
@@ -67,12 +78,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._ipython_display_ = None  # we use _repr_mimebundle_ instread
-        # Setup an output widget, so that any errors in our callbacks
-        # are actually shown. We display the output in the cell-output
-        # corresponding to the cell that instantiates the widget.
-        self._output_context = RFBOutputContext()
-        display(self._output_context)
         # Init attributes for drawing
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
@@ -86,54 +91,30 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # Setup events
         self.on_msg(self._rfb_handle_msg)
         self.observe(
-            self._rfb_schedule_maybe_draw, names=["frame_feedback", "has_visible_views"]
+            self._rfb_schedule_maybe_draw,
+            names=["_frame_feedback", "_has_visible_views"],
         )
 
     def _repr_mimebundle_(self, **kwargs):
-        data = {}
-
-        # Always add plain text
-        plaintext = repr(self)
-        if len(plaintext) > 110:
-            plaintext = plaintext[:110] + "…"
-        data["text/plain"] = plaintext
-
-        # Get the actual representation
-        try:
-            data.update(super()._repr_mimebundle_(**kwargs))
-        except Exception:
-            # On 7.6.3 and below, _ipython_display_ is used instead of _repr_mimebundle_.
-            # We fill in the widget representation that has been in use for 5+ years.
-            data["application/vnd.jupyter.widget-view+json"] = {
-                "version_major": 2,
-                "version_minor": 0,
-                "model_id": self._model_id,
-            }
-
-        # Add initial snapshot.
-        if self._view_name is not None:
-            data["text/html"] = self.snapshot()._repr_html_()
-
-        return data
-
-    def print(self, *args, **kwargs):
-        """Print to the widget's output area (for debugging purposes).
-
-        In Jupyter, print calls that occur in a callback or an asyncio task
-        may (depending on your version of the notebook/lab) not be shown.
-        Inside :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
-        and :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
-        you can use this method instead. The signature of this method
-        is fully compatible with the builtin print function (except for
-        the ``file`` argument).
-        """
-        self._output_context.print(*args, **kwargs)
+        # Use default
+        result = anywidget.AnyWidget._repr_mimebundle_(self, **kwargs)
+        # Get dict to add more data
+        data = None
+        if isinstance(result, tuple):
+            data = result[0]
+        elif isinstance(result, dict):
+            data = result
+        # Add initial snapshot
+        if data:
+            if self._view_name is not None:
+                data["text/html"] = self.snapshot()._repr_html_()
+        return result
 
     def close(self, *args, **kwargs):
         """Close all views of the widget and emit a close event."""
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
-        super().close(*args, **kwargs)
+        anywidget.AnyWidget.close(self, *args, **kwargs)
         self._rfb_handle_msg(self, {"event_type": "close"}, [])
 
     def _rfb_handle_msg(self, widget, content, buffers):
@@ -151,8 +132,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             if "modifiers" in content:
                 content["modifiers"] = tuple(content["modifiers"])
             # Let the subclass handle the event
-            with self._output_context:
-                self.handle_event(content)
+            self.handle_event(content)
 
     # ---- drawing
 
@@ -226,13 +206,10 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         """Schedule _maybe_draw() to be called in a fresh event loop iteration."""
         loop = asyncio.get_event_loop()
         loop.call_soon(self._rfb_maybe_draw)
-        # or
-        # ioloop = tornado.ioloop.IOLoop.current()
-        # ioloop.add_callback(self._rfb_maybe_draw)
 
     def _rfb_maybe_draw(self):
         """Perform a draw, if we can and should."""
-        feedback = self.frame_feedback
+        feedback = self._frame_feedback
         # Update stats
         self._rfb_update_stats(feedback)
         # Determine whether we should perform a draw: a draw was requested, and
@@ -241,15 +218,14 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         should_draw = (
             self._rfb_draw_requested
             and frames_in_flight < self.max_buffered_frames
-            and self.has_visible_views
+            and self._has_visible_views
         )
         # Do the draw if we should.
         if should_draw:
             self._rfb_draw_requested = False
-            with self._output_context:
-                array = self.get_frame()
-                if array is not None:
-                    self._rfb_send_frame(array)
+            array = self.get_frame()
+            if array is not None:
+                self._rfb_send_frame(array)
 
     def _rfb_schedule_lossless_draw(self, array, delay=0.3):
         self._rfb_cancel_lossless_draw()
