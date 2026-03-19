@@ -1,4 +1,3 @@
-import builtins
 from base64 import encodebytes
 
 from IPython.display import DisplayObject
