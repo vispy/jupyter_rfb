@@ -290,6 +290,15 @@ def test_automatic_events():
     assert len(events) == 1 and events[0]["type"] == "close"
 
 
+def test_print():
+    """Test that the widget has a fully featured print method."""
+    w = MyRFB()
+    w.print("foo bar", sep="-", end=".")
+    # mmm, a bit hard to see where the data has ended up,
+    # but if it did not error, that's something!
+    # We test the printing itself in test_utils.py
+
+
 def test_snapshot():
     """Test that the widget has a snapshot method that produces a Snapshot."""
     w = MyRFB()
@@ -329,6 +338,3 @@ def test_use_websocket():
     assert len(msg["buffers"]) == 1
     assert isinstance(msg["buffers"][0], bytes)
     assert msg["data_b64"] is None
-
-
-test_requesting_draws()

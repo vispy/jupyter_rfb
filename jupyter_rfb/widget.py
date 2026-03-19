@@ -17,9 +17,10 @@ from importlib.resources import files as resource_files
 
 import anywidget
 import numpy as np
+from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
-from ._utils import array2compressed, Snapshot
+from ._utils import array2compressed, RFBOutputContext, Snapshot
 
 
 def _load_js_and_css():
@@ -78,6 +79,11 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Setup an output widget, so that any errors in our callbacks
+        # are actually shown. We display the output in the cell-output
+        # corresponding to the cell that instantiates the widget.
+        self._output_context = RFBOutputContext()
+        display(self._output_context)
         # Init attributes for drawing
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
@@ -110,6 +116,19 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
                 data["text/html"] = self.snapshot()._repr_html_()
         return result
 
+    def print(self, *args, **kwargs):
+        """Print to the widget's output area (for debugging purposes).
+
+        In Jupyter, print calls that occur in a callback or an asyncio task
+        may (depending on your version of the notebook/lab) not be shown.
+        Inside :func:`.get_frame() <jupyter_rfb.RemoteFrameBuffer.get_frame>`
+        and :func:`.handle_event() <jupyter_rfb.RemoteFrameBuffer.handle_event>`
+        you can use this method instead. The signature of this method
+        is fully compatible with the builtin print function (except for
+        the ``file`` argument).
+        """
+        self._output_context.print(*args, **kwargs)
+
     def close(self, *args, **kwargs):
         """Close all views of the widget and emit a close event."""
         # When the widget is closed, we notify by creating a close event. The
@@ -132,7 +151,8 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             if "modifiers" in content:
                 content["modifiers"] = tuple(content["modifiers"])
             # Let the subclass handle the event
-            self.handle_event(content)
+            with self._output_context:
+                self.handle_event(content)
 
     # ---- drawing
 
@@ -230,9 +250,10 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # Do the draw if we should.
         if should_draw:
             self._rfb_draw_requested = False
-            array = self.get_frame()
-            if array is not None:
-                self._rfb_send_frame(array)
+            with self._output_context:
+                array = self.get_frame()
+                if array is not None:
+                    self._rfb_send_frame(array)
 
     def _rfb_schedule_lossless_draw(self, array, delay=0.3):
         self._rfb_cancel_lossless_draw()
@@ -282,7 +303,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             # Issue png warning?
             if quality < 100 and not self._rfb_warned_png:
                 self._rfb_warned_png = True
-                print(
+                self.print(
                     "Warning: No JPEG encoder found, using PNG instead. "
                     + "Install simplejpeg or pillow for better performance."
                 )
