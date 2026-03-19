@@ -1,0 +1,82 @@
+/*************************************************************************************************
+  renderview.css
+
+  This file is dedicated to the public domain under CC0 1.0.
+  This file is developed at https://github.com/pygfx/renderview, please contribute changes there.
+
+ *************************************************************************************************/
+
+div.renderview-wrapper {
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+    overflow: visible;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+div.renderview-wrapper .renderview-view {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    background: none;
+    border-radius: 6px;
+    border: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+div.renderview-wrapper .renderview-hidden {
+    display: none;
+}
+
+div.renderview-wrapper .renderview-top {
+    display: none;
+    position: absolute;
+    box-sizing: border-box;
+    z-index: 2;
+    top: -1.5em;
+    height: 1.5em;
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid rgba(127, 127, 127, 0.2);
+    border-bottom: 0;
+}
+
+div.renderview-wrapper .renderview-top span {
+    display: inline-block;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.1em 0.5em;
+    width: 100%;
+}
+
+div.renderview-wrapper .renderview-resizer {
+    display: none;
+    position: absolute;
+    box-sizing: border-box;
+    z-index: 3;
+    bottom: 0;
+    right: 0;
+    width: 14px;
+    height: 14px;
+    cursor: nwse-resize;
+}
+
+div.renderview-wrapper.has-titlebar {
+    margin-top: 2em !important;
+}
+
+div.renderview-wrapper.has-titlebar .renderview-top {
+    display: block;
+}
+
+div.renderview-wrapper.has-titlebar .renderview-view {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+div.renderview-wrapper.is-resizable .renderview-resizer {
+    display: block;
+}
