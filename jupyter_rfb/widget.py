@@ -282,7 +282,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             # Issue png warning?
             if quality < 100 and not self._rfb_warned_png:
                 self._rfb_warned_png = True
-                self.print(
+                print(
                     "Warning: No JPEG encoder found, using PNG instead. "
                     + "Install simplejpeg or pillow for better performance."
                 )

@@ -7,9 +7,6 @@ from ._png import array2png
 from ._jpg import array2jpg
 
 
-_original_print = builtins.print
-
-
 def array2compressed(array, quality=90):
     """Convert the given image (a numpy array) as a compressed array.
 

@@ -139,6 +139,7 @@ shown, use ``self.print()`` instead.
 Note that any other streaming to stdout and stderr (e.g. logging) may
 not become visible anywhere.
 
+TODO: revisit this
 
 Measuring statistics
 --------------------
