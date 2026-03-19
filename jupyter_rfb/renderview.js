@@ -328,6 +328,8 @@ class BaseRenderView {
     const wrapperElement = this.wrapperElement
 
     if (wrapperElement !== null) {
+      this.viewElement.classList.add('renderview-view')
+
       // Wrap it
       wrapperElement.classList.add('renderview-wrapper')
       wrapperElement.appendChild(this.viewElement)
