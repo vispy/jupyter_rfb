@@ -1,7 +1,7 @@
 # -- Project info
 
 [project]
-version = "0.5.4"
+dynamic = ["version"]
 name = "jupyter-rfb"
 description = "Remote Frame Buffer for Jupyter"
 readme = "README.md"
@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = ["anywidget", "numpy"]
 [project.optional-dependencies]
-build = ["build", "hatchling", "twine"]
+build = ["build", "flit", "twine"]
 lint = ["ruff", "pre-commit"]
 tests = ["pytest", "simplejpeg; implementation_name != 'pypy'"]
 docs = ["numpy", "anywidget", "sphinx", "nbsphinx"]
@@ -37,14 +37,10 @@ Repository = "https://github.com/vispy/jupyter_rfb"
 
 
 # --- Build system
-# To do a release, run `python release.py`
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.sdist]
-exclude = [".github", ".git"]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 # --- Tooling
 

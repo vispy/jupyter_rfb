@@ -100,7 +100,7 @@ Event throttling
 Events go from the client (browser) to the server (Python). Some of
 these are throttled so they are emitted a maximum number of times per
 second. This is to avoid spamming the communication channel and server
-process. The throttling applies to the resize, scroll, and pointer_move
+process. The throttling applies to the scroll and pointer_move
 events.
 
 
@@ -129,7 +129,7 @@ methods are called from a Jupyter
 COM event and in an asyncio task, respectively. Under these circumstances,
 Jupyter Lab/Notebook may swallow exceptions as well as writes to stdout/stderr.
 See `issue #35 <https://github.com/vispy/jupyter_rfb/issues/35>`_ for details.
-These are limitation of Jupyter, and we should expect these to be fixed/improved in the future.
+These are limitation of Jupyter, and we hope these to be fixed in the future.
 
 In jupyter_rfb we take measures to make exceptions raised in
 either of these methods result in a traceback shown right above the

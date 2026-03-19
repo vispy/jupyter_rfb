@@ -8,12 +8,12 @@ Remote Frame Buffer for Jupyter
 
 ## Introduction
 
-The `jupyter_rfb` library provides a widget (an `ipywidgets` subclass)
-that can be used in the Jupyter notebook and in JupyterLab to implement
+The `jupyter_rfb` library provides a widget (an `anywidget` subclass)
+that can be used in various notebook environments to implement
 a remote frame-buffer.
 
 Images that are generated at the server are streamed to the client
-(Jupyter) where they are shown. Events (such as mouse interactions) are
+(Jupyter) where they are shown. [Standardized](https://pygfx.org/renderview/) events (such as mouse interactions) are
 streamed in the other direction, where the server can react by
 generating new images.
 
