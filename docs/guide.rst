@@ -50,11 +50,10 @@ example:
     class MyRemoteFrameBuffer(jupyter_rfb.RemoteFrameBuffer):
 
         def handle_event(self, event):
-            event_type = event["event_type"]
-            if event_type == "resize":
+            if event["type"] == "resize":
                 self.logical_size = event["width"], event["height"]
-                self.pixel_ratio = event["pixel_ratio"]
-            elif event_type == "pointer_down":
+                self.pixel_ratio = event["ratio"]
+            elif event["type"] == "pointer_down":
                 pass  # ...
 
 

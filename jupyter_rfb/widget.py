@@ -153,7 +153,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             # We know the size from the last resize event
             w = ref_resize_event["width"]
             h = ref_resize_event["height"]
-            if pixel_ratio and pixel_ratio != ref_resize_event["pixel_ratio"]:
+            if pixel_ratio and pixel_ratio != ref_resize_event["ratio"]:
                 new_pixel_ratio = pixel_ratio
         else:
             # There has not been a resize event yet -> guess the size from our traits
@@ -170,7 +170,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
                 "height": h,
                 "pwidth": int(w * new_pixel_ratio),
                 "pheight": int(h * new_pixel_ratio),
-                "pixelratio": new_pixel_ratio,
+                "ratio": new_pixel_ratio,
                 "pixel_ratio": new_pixel_ratio,
             }
             self.handle_event(evt)

@@ -466,7 +466,7 @@ class BaseRenderView {
         height: logicalHeight,
         pwidth: physicalWidth,
         pheight: physicalHeight,
-        pixelratio: ratio,
+        ratio,
         timestamp: getTimestamp()
       }
       this.onEvent(event)

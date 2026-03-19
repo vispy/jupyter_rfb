@@ -253,7 +253,7 @@ def test_requesting_draws():
 
     # On a resize event, a frame is requested too
     w._rfb_draw_requested = False
-    w._rfb_handle_msg(None, {"event_type": "resize"}, [])
+    w._rfb_handle_msg(None, {"type": "resize"}, [])
     assert w._rfb_draw_requested
 
 
@@ -287,7 +287,7 @@ def test_automatic_events():
     # On closing, an event is emitted
     # Note that when the model is closed from JS, we emit a close event from there.
     w.close()
-    assert len(events) == 1 and events[0]["event_type"] == "close"
+    assert len(events) == 1 and events[0]["type"] == "close"
 
 
 def test_snapshot():
@@ -329,3 +329,6 @@ def test_use_websocket():
     assert len(msg["buffers"]) == 1
     assert isinstance(msg["buffers"][0], bytes)
     assert msg["data_b64"] is None
+
+
+test_requesting_draws()
