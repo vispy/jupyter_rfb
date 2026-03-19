@@ -134,12 +134,13 @@ class RendercanvasAnywidgetModel {
   }
 
   _request_animation_frame () {
-    // Request an animation frame, but with a tiny delay, just to avoid
-    // straining the browser. This seems to actually make things more smooth.
-    // TODO: revisit this delay, as it affects max possible FPS
+    // Request an animation frame.
+    // Before the anywidget refactor, we did this via a tiny delay, which supposedly made things more smooth,
+    // but it also increases the delay for a frame to hit the screen, and limits the max fps, so let's not do that.
     if (!this._img_update_pending) {
       this._img_update_pending = true
-      window.setTimeout(window.requestAnimationFrame, 5, this._animate.bind(this))
+      window.requestAnimationFrame(this._animate.bind(this))
+      // window.setTimeout(window.requestAnimationFrame, 5, this._animate.bind(this)) // via a delay
     }
   }
 
@@ -164,16 +165,12 @@ class RendercanvasAnywidgetModel {
     // Update the image sources
     for (const view of this.views) {
       view.viewElement.src = newSrc
+      view.onload = this._request_animation_frame.bind(this)
     }
 
     // Let the server know we processed the image (even if it's not shown yet)
     this._lastFrame = frame
     this._send_response()
-
-    // TODO: here or when we detect load
-    if (this._frames.length > 0) {
-      this._request_animation_frame()
-    }
   }
 
   onEvent (event) {
@@ -204,6 +201,7 @@ class AnywidgetRenderView extends BaseRenderView {
 
     // Call super
     super(viewElement, wrapperElement)
+    this.setThrottle(20) // 20ms -> max 50 move/wheel events per second
 
     // Connect to the model, it will initialize it with the current size and frame-data
     this.model = model
