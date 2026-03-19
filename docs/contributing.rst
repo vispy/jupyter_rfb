@@ -18,30 +18,18 @@ We uphold high standards for the code, and we'll help you achieve that.
 Install jupyter_rfb in development mode
 ---------------------------------------
 
-For a development installation (requires Node.js and Yarn):
-
 .. code-block::
 
     $ git clone https://github.com/vispy/jupyter_rfb.git
     $ cd jupyter_rfb
     $ pip install -e .[dev]
-    $ jupyter nbextension install --py --symlink --overwrite --sys-prefix jupyter_rfb
-    $ jupyter nbextension enable --py --sys-prefix jupyter_rfb
 
-When actively developing the JavaScript code, run the command:
 
-.. code-block::
-
-    $ jupyter labextension develop --overwrite jupyter_rfb
-
-Then you need to rebuild the JS when you make a code change:
+When actively developing the JavaScript code, install the ``standardjs`` linter/formatter:
 
 .. code-block::
 
-    $ cd js
-    $ yarn run build
-
-You then need to refresh the JupyterLab page when your javascript changes.
+    $ npm install --global standard
 
 
 Automated tools
@@ -51,7 +39,7 @@ To make it easier to keep the code valid and clean, we use the following tools:
 
 * Run ``ruff format`` to autoformat the code.
 * Run ``ruff check`` for linting and formatting checks.
-* Run ``python release.py`` to do a release (for maintainers only).
+* Run ``standard src --fix`` to autoformat and lint the JavaScript code.
 
 
 Autocommit hook
@@ -71,4 +59,4 @@ Tips to test changes made to code
 In general you should not have to restart the server when working on the code of jupyter_rfb:
 
 * When Python code has changed: restart and clear all outputs.
-* When the JavaScript code has changed: rebuild with yarn, and then refresh (F5) the page.
+* When the JavaScript code has changed: clear outputs, save, and then refresh (F5) the page.
