@@ -163,7 +163,7 @@ class RendercanvasAnywidgetModel {
     // Update the image sources
     for (const view of this.views) {
       view.viewElement.src = newSrc
-      view.onload = this._request_animation_frame.bind(this)
+      view.viewElement.onload = this._request_animation_frame.bind(this)
     }
 
     // Let the server know we processed the image (even if it's not shown yet)
