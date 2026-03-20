@@ -72,7 +72,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
     # 2: new style events (with 'type', 'timestamp', 'ratio')
     # 3: both
     # TODO: about a year after vispy and rendercanvas had a release that was compatible with the new style, drop the compatibility
-    _event_compatibility = 3
+    _event_compatibility = None
 
     # Widget specific traits
     _frame_feedback = Dict({}).tag(sync=True)
@@ -86,11 +86,14 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Compat: PyGfx errors when both 'type' and 'event_type' are present
-        if any(
-            cls.__module__.startswith("rendercanvas") for cls in self.__class__.mro()
-        ):
-            self._event_compatibility = 1
+        # Set default event compatibility. Default is 3, or 1 for PyGfx (bc it errors when both 'type' and 'event_type' are present)
+        if self._event_compatibility is None:
+            self._event_compatibility = 3
+            if any(
+                cls.__module__.startswith("rendercanvas")
+                for cls in self.__class__.mro()
+            ):
+                self._event_compatibility = 1
         # Setup an output widget, so that any errors in our callbacks
         # are actually shown. We display the output in the cell-output
         # corresponding to the cell that instantiates the widget.
