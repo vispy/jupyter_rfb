@@ -129,7 +129,7 @@ def test_snapshot():
     data = s._repr_mimebundle_()
     assert "text/html" in data
     html = data["text/html"]
-    assert "data:image/png;base64" in html  # looks like the png is in there
+    assert "data:image/" in html  # looks like the png/jpg is in there
     assert "width:5px" in html and "height:5px" in html  # logical size
     assert "class='KLS'" in html  # css class name
     assert "footitle" in html  # the title

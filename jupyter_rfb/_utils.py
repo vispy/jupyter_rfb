@@ -100,9 +100,8 @@ class Snapshot(DisplayObject):
 
     def _repr_html_(self):
         # Convert to PNG
-        png_data = array2png(self.data)
-        preamble = "data:image/png;base64,"
-        src = preamble + encodebytes(png_data).decode()
+        mimetype, data = array2compressed(self.data, 70)
+        src = f"data:image/{mimetype};base64," + encodebytes(data).decode()
         # Create html repr
         class_str = f"class='{self.class_name}'" if self.class_name else ""
         img_style = f"width:{self.width}px;height:{self.height}px;"
