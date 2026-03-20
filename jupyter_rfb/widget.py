@@ -174,12 +174,12 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
                 old_event = event
                 event = {"event_type": old_event["type"]}
                 event.update(old_event)
-                event["times_stamp"] = event["timestamp"]
+                event["time_stamp"] = event.get("timestamp", 0)
                 if "ratio" in event:
                     event["pixel_ratio"] = event["ratio"]
                 if self._event_compatibility == 1:
-                    event.pop("type")
-                    event.pop("timestamp")
+                    event.pop("type", None)
+                    event.pop("timestamp", None)
                     event.pop("ratio", None)
 
             # Let the subclass handle the event
