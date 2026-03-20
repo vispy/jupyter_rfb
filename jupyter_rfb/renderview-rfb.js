@@ -215,6 +215,9 @@ class AnywidgetRenderView extends BaseRenderView {
     if (event.type === 'resize') {
       // Note that there can be multiple views that can possibly be individually resized.
       // TODO: keep logical size in check between different views?
+      if (event.width * event.height <= 0) {
+        return // The element of a new view is temporarily zero-sized at initialization
+      }
     } else if (event.type === 'close') {
       return // we don't close when one view closes, only when the widget closes
     } else if (event.type === 'show') {

@@ -304,6 +304,13 @@ def test_snapshot():
     w = MyRFB()
     s = w.snapshot()
     assert isinstance(s, Snapshot)
+    assert s.data.shape == (1, 1, 3)
+
+    w.request_draw()
+    w._rfb_maybe_draw()  # similate first frame
+
+    s = w.snapshot()
+    assert isinstance(s, Snapshot)
     assert np.all(s.data == w.get_frame())
 
 
