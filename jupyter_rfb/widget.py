@@ -67,6 +67,13 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
     _esm = JS
     _css = CSS
 
+    # A bitmask, allowing subclasses to determine the events that they receive
+    # 1: old events (jupyter rfb spec, with 'event_type', 'time_stamp', 'pixel_ratio')
+    # 2: new style events (with 'type', 'timestamp', 'ratio')
+    # 3: both
+    # TODO: about a year after vispy and rendercanvas had a release that was compatible with the new style, drop the compatibility
+    _event_compatibility = None
+
     # Widget specific traits
     _frame_feedback = Dict({}).tag(sync=True)
     _has_visible_views = Bool(False).tag(sync=True)
@@ -79,6 +86,14 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set default event compatibility. Default is 3, or 1 for PyGfx (bc it errors when both 'type' and 'event_type' are present)
+        if self._event_compatibility is None:
+            self._event_compatibility = 3
+            if any(
+                cls.__module__.startswith("rendercanvas")
+                for cls in self.__class__.mro()
+            ):
+                self._event_compatibility = 1
         # Setup an output widget, so that any errors in our callbacks
         # are actually shown. We display the output in the cell-output
         # corresponding to the cell that instantiates the widget.
@@ -139,20 +154,37 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
         if "type" in content:
+            event = content
+
             # We have some builtin handling
-            if content["type"] == "resize":
-                self._rfb_last_resize_event = content
+            if event["type"] == "resize":
+                self._rfb_last_resize_event = event.copy()
+                self._rfb_last_resize_event["timestamp"] = 0
                 self.request_draw()
-            elif content["type"] == "close":
+            elif event["type"] == "close":
                 self._repr_mimebundle_ = None
             # Turn lists into tuples (js/json does not have tuples)
-            if "buttons" in content:
-                content["buttons"] = tuple(content["buttons"])
-            if "modifiers" in content:
-                content["modifiers"] = tuple(content["modifiers"])
+            if "buttons" in event:
+                event["buttons"] = tuple(event["buttons"])
+            if "modifiers" in event:
+                event["modifiers"] = tuple(event["modifiers"])
+
+            # Handle backwards compatibility
+            if self._event_compatibility & 1:  # 1 or 3
+                old_event = event
+                event = {"event_type": old_event["type"]}
+                event.update(old_event)
+                event["time_stamp"] = event.get("timestamp", 0)
+                if "ratio" in event:
+                    event["pixel_ratio"] = event["ratio"]
+                if self._event_compatibility == 1:
+                    event.pop("type", None)
+                    event.pop("timestamp", None)
+                    event.pop("ratio", None)
+
             # Let the subclass handle the event
             with self._output_context:
-                self.handle_event(content)
+                self.handle_event(event)
 
     # ---- drawing
 
@@ -185,20 +217,19 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         if new_pixel_ratio:
             evt = {
                 "type": "resize",
-                "event_type": "resize",
                 "width": w,
                 "height": h,
                 "pwidth": int(w * new_pixel_ratio),
                 "pheight": int(h * new_pixel_ratio),
                 "ratio": new_pixel_ratio,
-                "pixel_ratio": new_pixel_ratio,
+                "timestamp": 0,
             }
-            self.handle_event(evt)
+            self._rfb_handle_msg(self, evt, [])
         # Render a frame
         array = self.get_frame()
         # Reset pixel ratio
         if new_pixel_ratio and ref_resize_event:
-            self.handle_event(ref_resize_event)
+            self._rfb_handle_msg(self, ref_resize_event, [])
         # Create snapshot object
         if array is None:
             array = np.ones((1, 1), np.uint8) * 127

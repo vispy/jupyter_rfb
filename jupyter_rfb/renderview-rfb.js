@@ -83,9 +83,7 @@ class RendercanvasAnywidgetModel {
     const t = getTimestamp()
     const event = {
       type: 'close',
-      timestamp: t,
-      event_type: 'close',
-      time_stamp: t
+      timestamp: t
     }
     this.onEvent(event)
   }
@@ -217,7 +215,6 @@ class AnywidgetRenderView extends BaseRenderView {
     if (event.type === 'resize') {
       // Note that there can be multiple views that can possibly be individually resized.
       // TODO: keep logical size in check between different views?
-      event.pixel_ratio = event.ratio
     } else if (event.type === 'close') {
       return // we don't close when one view closes, only when the widget closes
     } else if (event.type === 'show') {
@@ -227,10 +224,6 @@ class AnywidgetRenderView extends BaseRenderView {
       this.isVisible = false
       this.model.updateVisibility()
     }
-
-    // Backwards compat with previous jupyter_rfb event spec
-    event.event_type = event.type
-    event.time_stamp = event.timestamp
 
     this.model.onEvent(event)
   }
