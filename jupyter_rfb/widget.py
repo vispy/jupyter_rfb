@@ -257,6 +257,19 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             self._rfb_cancel_lossless_draw()
             self._rfb_schedule_maybe_draw()
 
+    def send_frame(self, array):
+        """Send a frame to display.
+
+        The intended use is for async use-cases, to let ``get_frame()`` return
+        None, render the frame asynchronously, and use ``send_frame()`` when its
+        done.
+
+        This function *can* be used to push frames to the client, but this is
+        not recommended in general, since it bypasses the frame throughput
+        mechanism, and can therefore overload the IO, resulting in high latency.
+        """
+        self._rfb_send_frame(array)
+
     def _rfb_schedule_maybe_draw(self, *args):
         """Schedule _maybe_draw() to be called in a fresh event loop iteration."""
         try:
@@ -424,8 +437,11 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         Subclasses should overload this method. It is automatically called during a draw.
         The returned numpy array must be NxM (grayscale), NxMx3 (RGB) or NxMx4 (RGBA).
         May also return ``None`` to cancel the draw.
+
+        As alternative asynchronous usage, the implementation may also return
+        None and then call ``send_frame()`` somewhat later.
         """
-        return np.ones((1, 1), np.uint8) * 127
+        return None
 
     def handle_event(self, event):
         """Handle an incoming event.
