@@ -100,6 +100,9 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         self._output_context = RFBOutputContext()
         display(self._output_context)
         # Init attributes for drawing
+        self._rfb_last_frame = None
+        self._rfb_displayed_with_handle = False
+        self._rfb_pending_display = None
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
         self._rfb_last_confirmed_index = 0
@@ -117,6 +120,17 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         )
 
     def _repr_mimebundle_(self, **kwargs):
+        # This is a bit of a dirty trick. On the first time that this is called,
+        # we assume that this is because we are displayed, e.g. because the
+        # canvas is the last expression in a cell. Instead of returning the
+        # expected data, we call display() and return None. That provides as
+        # with a display handle, that we can use to replace the display once we
+        # receive the first frame.
+        if not self._rfb_displayed_with_handle:
+            self._rfb_displayed_with_handle = True
+            self._rfb_pending_display = display(self, display_id=True)
+            return None
+
         # Use default
         result = anywidget.AnyWidget._repr_mimebundle_(self, **kwargs)
         # Get dict to add more data
@@ -125,10 +139,10 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             data = result[0]
         elif isinstance(result, dict):
             data = result
-        # Add initial snapshot
-        if data:
-            if self._view_name is not None:
-                data["text/html"] = self.snapshot()._repr_html_()
+        # Add initial snapshot if we have it
+        if data and self._rfb_last_frame is not None:
+            data["text/html"] = self.snapshot()._repr_html_()
+            self._rfb_pending_display = None  # no need to reload
         return result
 
     def print(self, *args, **kwargs):
@@ -158,11 +172,11 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
             # We have some builtin handling
             if event["type"] == "resize":
-                self._rfb_last_resize_event = event.copy()
-                self._rfb_last_resize_event["timestamp"] = 0
+                self._rfb_last_resize_event = event
                 self.request_draw()
             elif event["type"] == "close":
-                self._repr_mimebundle_ = None
+                self._rfb_last_frame = None
+                self._rfb_displayed_with_handle = True
             # Turn lists into tuples (js/json does not have tuples)
             if "buttons" in event:
                 event["buttons"] = tuple(event["buttons"])
@@ -188,58 +202,31 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     # ---- drawing
 
-    def snapshot(self, pixel_ratio=None, _initial=False):
+    def snapshot(self, pixel_ratio=None):
         """Create a snapshot of the current state of the widget.
 
         Returns an ``IPython DisplayObject`` that can simply be used as
         a cell output. The display object has a ``data`` attribute that holds
         the image array data (typically a numpy array).
 
-        The ``pixel_ratio`` can optionally be set to influence the resolution.
-        By default the widgets' "native" pixel-ratio is used.
+        The ``pixel_ratio`` argument is deprecated and ignored.
         """
         # Get the current size
         ref_resize_event = self._rfb_last_resize_event
-        new_pixel_ratio = None
         if ref_resize_event:
-            # We know the size from the last resize event
             w = ref_resize_event["width"]
             h = ref_resize_event["height"]
-            if pixel_ratio and pixel_ratio != ref_resize_event["ratio"]:
-                new_pixel_ratio = pixel_ratio
         else:
-            # There has not been a resize event yet -> guess the size from our traits
-            new_pixel_ratio = pixel_ratio or 1
             css_width, css_height = self.css_width, self.css_height
             w = float(css_width[:-2]) if css_width.endswith("px") else 500
             h = float(css_height[:-2]) if css_height.endswith("px") else 300
-        # If the new pixel ratio is different from "native", we need to resize first
-        if new_pixel_ratio:
-            evt = {
-                "type": "resize",
-                "width": w,
-                "height": h,
-                "pwidth": int(w * new_pixel_ratio),
-                "pheight": int(h * new_pixel_ratio),
-                "ratio": new_pixel_ratio,
-                "timestamp": 0,
-            }
-            self._rfb_handle_msg(self, evt, [])
-        # Render a frame
-        array = self.get_frame()
-        # Reset pixel ratio
-        if new_pixel_ratio and ref_resize_event:
-            self._rfb_handle_msg(self, ref_resize_event, [])
-        # Create snapshot object
+        # Get last frame or single-pixel image
+        array = self._rfb_last_frame
         if array is None:
-            array = np.ones((1, 1), np.uint8) * 127
-        if _initial:
-            title = "initial snapshot"
-            class_name = "initial-snapshot-" + self._model_id
-        else:
-            title = "snapshot"
-            class_name = "snapshot-" + self._model_id
-        return Snapshot(array, w, h, title, class_name)
+            array = np.ones((1, 1, 3), np.uint8) * 127
+        # Super-weird, but it looks like nbsphinx only selects the text/html field when we use a css class
+        # that starts with 'snapshot-'. Is this some upstream hack to make jupyter-rfb work, that we don't know of?
+        return Snapshot(array, w, h, "snapshot", "snapshot-rfb")
 
     def request_draw(self):
         """Schedule a new draw. This method itself returns immediately.
@@ -324,9 +311,14 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # For considerations about performance,
         # see https://github.com/vispy/jupyter_rfb/issues/3
 
+        # Failsafe
+        if array.size == 0:
+            return
+
         quality = 100 if is_lossless_redraw else self.quality
 
         self._rfb_frame_index += 1
+        self._rfb_last_frame = array
         timestamp = time.time()
 
         # Turn array into a based64-encoded JPEG or PNG
@@ -362,6 +354,11 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             if self._rfb_stats["start_time"] <= 0:  # Start measuring
                 self._rfb_stats["start_time"] = timestamp
                 self._rfb_last_confirmed_index = self._rfb_frame_index - 1
+
+        # Reload the output if we did not have a frame when the widget was first loaded
+        if self._rfb_pending_display is not None:
+            if self._rfb_last_resize_event is not None:
+                self._rfb_pending_display.update(self)  # -> calls _repr_mimebundle_
 
         # Compose message and send
         msg = dict(
