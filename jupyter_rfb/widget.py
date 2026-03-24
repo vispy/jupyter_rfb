@@ -103,7 +103,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         display(self._output_context)
         # Init attributes for drawing
         self._rfb_last_frame = None
-        self._rfb_displayed_with_handle = False
         self._rfb_pending_display = None
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
@@ -122,17 +121,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         )
 
     def _repr_mimebundle_(self, **kwargs):
-        # This is a bit of a dirty trick. On the first time that this is called,
-        # we assume that this is because we are displayed, e.g. because the
-        # canvas is the last expression in a cell. Instead of returning the
-        # expected data, we call display() and return None. That provides as
-        # with a display handle, that we can use to replace the display once we
-        # receive the first frame.
-        if not self._rfb_displayed_with_handle:
-            self._rfb_displayed_with_handle = True
-            self._rfb_pending_display = display(self, display_id=True)
-            return None
-
         # Use default
         result = anywidget.AnyWidget._repr_mimebundle_(self, **kwargs)
         # Get dict to add more data
@@ -142,7 +130,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         elif isinstance(result, dict):
             data = result
         # Add initial snapshot if we have it
-        if data and self._rfb_last_frame is not None:
+        if data and self._rfb_pending_display and self._rfb_last_frame is not None:
             data["text/html"] = self.snapshot()._repr_html_()
             self._rfb_pending_display = None  # no need to reload
         return result
@@ -178,7 +166,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
                 self.request_draw()
             elif event["type"] == "close":
                 self._rfb_last_frame = None
-                self._rfb_displayed_with_handle = True
             # Turn lists into tuples (js/json does not have tuples)
             if "buttons" in event:
                 event["buttons"] = tuple(event["buttons"])
@@ -203,6 +190,18 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
                 self.handle_event(event)
 
     # ---- drawing
+
+    def display(self):
+        """Display the widget.
+
+        The benefit of using this (instead of using the widget as the last expression of a cell)
+        is that an html snapshot is added to the output. This happens either directly,
+        or on the next drawn frame (if no frames have been drawn yet).
+        """
+        self._rfb_pending_display = True
+        id = display(self, display_id=True)
+        if self._rfb_pending_display:  # i.e. is not set to None by __repr__
+            self._rfb_pending_display = id
 
     def snapshot(self, pixel_ratio=None):
         """Create a snapshot of the current state of the widget.
