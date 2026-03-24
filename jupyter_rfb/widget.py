@@ -226,7 +226,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             array = np.ones((1, 1, 3), np.uint8) * 127
         # Super-weird, but it looks like nbsphinx only selects the text/html field when we use a css class
         # that starts with 'snapshot-'. Is this some upstream hack to make jupyter-rfb work, that we don't know of?
-        return Snapshot(array, w, h, "snapshot", "snapshot-rfb")
+        return Snapshot(array, w, h, "snapshot", f"snapshot-rfb model{self._model_id}")
 
     def request_draw(self):
         """Schedule a new draw. This method itself returns immediately.
