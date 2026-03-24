@@ -105,7 +105,7 @@ class Snapshot(DisplayObject):
         # Create html repr
         class_str = f"class='{self.class_name}'" if self.class_name else ""
         img_style = f"width:{self.width}px;height:{self.height}px;"
-        tt_style = "position: absolute; top:0; left:0; padding:1px 3px; "
+        tt_style = "position: absolute; top:0; left:0; padding:3px 4px; border-radius:0 0 4px 0;"
         tt_style += (
             "background: #777; color:#fff; font-size: 90%; font-family:sans-serif; "
         )
