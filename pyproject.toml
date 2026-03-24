@@ -22,11 +22,15 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Multimedia :: Graphics",
 ]
-dependencies = ["anywidget", "numpy"]
+dependencies = [
+    "anywidget",
+    "numpy",
+    "simplejpeg; implementation_name != 'pypy'",
+]
 [project.optional-dependencies]
 build = ["build", "flit", "twine"]
 lint = ["ruff", "pre-commit"]
-tests = ["pytest", "simplejpeg; implementation_name != 'pypy'"]
+tests = ["pytest"]
 docs = ["numpy", "anywidget", "sphinx", "nbsphinx"]
 dev = ["jupyter_rfb[build,lint,tests,docs]"]
 
