@@ -82,7 +82,9 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
     css_width = Unicode("500px").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
+    has_titlebar = Bool(False).tag(sync=True)
     cursor = Unicode("default").tag(sync=True)
+    title = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
