@@ -2,7 +2,7 @@
 Welcome to the jupyter_rfb docs!
 ================================
 
-The `jupyter_rfb` library provides a widget (an `anywidget` subclass)
+The `jupyter_rfb` library provides a widget (based on `anywidget`)
 that can be used in various notebook environments to implement
 a *remote frame-buffer*.
 
