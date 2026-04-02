@@ -241,7 +241,7 @@ class BaseRenderView {
   * Set whether the view has a button to minimize the widget.
   * Note that the view can only be made minimizable if it was instantiated with a wrapper.
   *
-  * @param {boolean} resizable - Whether to make it resizable or not.
+  * @param {boolean} minimizable - Whether to make it minimizable or not.
   */
   setMinimizable (minimizable) {
     if (this.wrapperElement) {
@@ -257,7 +257,7 @@ class BaseRenderView {
   * Set whether the view has a button to close the widget.
   * Note that the view can only be made closable if it was instantiated with a wrapper.
   *
-  * @param {boolean} resizable - Whether to make it resizable or not.
+  * @param {boolean} closable - Whether to make it closable or not.
   */
   setClosable (closable) {
     if (this.wrapperElement) {
