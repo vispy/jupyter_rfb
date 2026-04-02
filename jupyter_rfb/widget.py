@@ -25,7 +25,7 @@ from ._utils import array2compressed, RFBOutputContext, Snapshot
 
 def _load_js_and_css():
     js = ""
-    for fname in ["renderview.js", "renderview-rfb.js"]:
+    for fname in ["renderview.js", "renderview-afm.js"]:
         js_path = resource_files("jupyter_rfb").joinpath(fname)
         js += js_path.read_text() + "\n\n"
 
