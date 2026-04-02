@@ -474,7 +474,7 @@ class BaseRenderView {
       this.onEvent(event)
     })
 
-    this._resizeObserver.observe(this.viewElement)
+    this._resizeObserver.observe(this.sizeElement)
 
     // ----- pointer ---------------
 
