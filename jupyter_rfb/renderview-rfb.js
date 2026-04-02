@@ -46,6 +46,18 @@ class RendercanvasAnywidgetModel {
           view.setResizable(resizable)
         }
       })
+      anymodel.on(`change:${prefix}is_minimizable`, () => {
+        const minimizable = anymodel.get(`${prefix}is_minimizable`)
+        for (const view of this.views) {
+          view.setMinimizable(minimizable)
+        }
+      })
+      anymodel.on(`change:${prefix}is_closable`, () => {
+        const closable = anymodel.get(`${prefix}is_closable`)
+        for (const view of this.views) {
+          view.setClosable(closable)
+        }
+      })
       anymodel.on(`change:${prefix}has_titlebar`, () => {
         const titlebar = anymodel.get(`${prefix}has_titlebar`)
         for (const view of this.views) {

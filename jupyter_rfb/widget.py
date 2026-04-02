@@ -82,6 +82,8 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
     css_width = Unicode("500px").tag(sync=True)
     css_height = Unicode("300px").tag(sync=True)
     resizable = Bool(True).tag(sync=True)
+    is_minimizable = Bool(False).tag(sync=True)
+    is_closable = Bool(False).tag(sync=True)
     has_titlebar = Bool(False).tag(sync=True)
     cursor = Unicode("default").tag(sync=True)
     title = Unicode("").tag(sync=True)

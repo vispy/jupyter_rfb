@@ -138,7 +138,7 @@ class BaseRenderView {
     this._lsize = null // cached logical size
     this._wheelThrottle = 20 // to avoid flooding wheel events
     this._moveThrottle = 20 // to avoid flooding move events
-    this._isVisible = false // set by intersection observer
+    this._isVisible = 0 // bitmask: 1->intersected, 2->nonzerosize
 
     this._focusElement = null
     this._abortController = new AbortController()
@@ -173,8 +173,12 @@ class BaseRenderView {
     this.viewElement = null
     this.sizeElement = null
     this.titleElement = null
+    this.butCloseElement = null
     if (this.wrapperElement) {
       this.wrapperElement.innerHTML = ''
+      this.wrapperElement.classList.remove('renderview-wrapper')
+      this.wrapperElement.style.width = ''
+      this.wrapperElement.style.height = ''
       this.wrapperElement = null
     }
     const event = {
@@ -229,6 +233,38 @@ class BaseRenderView {
         this.wrapperElement.classList.add('is-resizable')
       } else {
         this.wrapperElement.classList.remove('is-resizable')
+      }
+    }
+  }
+
+  /**
+  * Set whether the view has a button to minimize the widget.
+  * Note that the view can only be made minimizable if it was instantiated with a wrapper.
+  *
+  * @param {boolean} minimizable - Whether to make it minimizable or not.
+  */
+  setMinimizable (minimizable) {
+    if (this.wrapperElement) {
+      if (minimizable) {
+        this.wrapperElement.classList.add('is-minimizable')
+      } else {
+        this.wrapperElement.classList.remove('is-minimizable')
+      }
+    }
+  }
+
+  /**
+  * Set whether the view has a button to close the widget.
+  * Note that the view can only be made closable if it was instantiated with a wrapper.
+  *
+  * @param {boolean} closable - Whether to make it closable or not.
+  */
+  setClosable (closable) {
+    if (this.wrapperElement) {
+      if (closable) {
+        this.wrapperElement.classList.add('is-closable')
+      } else {
+        this.wrapperElement.classList.remove('is-closable')
       }
     }
   }
@@ -290,6 +326,25 @@ class BaseRenderView {
   onEvent (event) { }
 
   /**
+   * Internal method to handle visibility.
+   */
+  _updateVisibleBitmask (i, bitValue) {
+    const wasVisible = this._isVisible === 3
+    if (bitValue) { this._isVisible |= i } else { this._isVisible &= (~i) }
+    const nowVisible = this._isVisible === 3
+    if (nowVisible !== wasVisible) {
+      if (!nowVisible) {
+        this._focusElement.blur()
+      }
+      const event = {
+        type: nowVisible ? 'show' : 'hide',
+        timestamp: getTimestamp()
+      }
+      this.onEvent(event)
+    }
+  }
+
+  /**
    * Internal method to initialize the view's helper elements.
    */
   _initElements () {
@@ -343,10 +398,21 @@ class BaseRenderView {
       // Create title bar
       const topElement = document.createElement('div')
       topElement.classList.add('renderview-top')
-      const titleElement = document.createElement('span')
-      this.titleElement = titleElement
-      titleElement.innerText = 'RenderView'
-      topElement.appendChild(titleElement)
+      this.titleElement = document.createElement('span')
+      this.titleElement.innerText = 'RenderView'
+      this.titleElement.classList.add('renderview-title')
+      this.butMinimizeElement = document.createElement('span')
+      this.butMinimizeElement.innerText = '_'
+      this.butMinimizeElement.classList.add('renderview-button', 'renderview-minimize-button')
+      this.butCloseElement = document.createElement('span')
+      this.butCloseElement.innerText = '×'
+      this.butCloseElement.classList.add('renderview-button', 'renderview-close-button')
+      const butPadElement = document.createElement('span')
+      butPadElement.style.width = '0.3em'
+      topElement.appendChild(this.titleElement)
+      topElement.appendChild(this.butMinimizeElement)
+      topElement.appendChild(this.butCloseElement)
+      topElement.appendChild(butPadElement)
       wrapperElement.appendChild(topElement)
 
       // Enable resizing
@@ -389,7 +455,7 @@ class BaseRenderView {
     const viewElement = this.viewElement
     const signal = this._abortController.signal // to unregister/abort stuff
 
-    // ----- visibility ---------------
+    // ----- visibility and focus and closing ---------------
 
     this._intersectionObserver = new IntersectionObserver((entries, observer) => {
       // This gets called when one of the observed elements becomes visible/invisible.
@@ -398,16 +464,51 @@ class BaseRenderView {
       for (const entry of entries) {
         isVisible = isVisible || entry.isIntersecting
       }
-      if (isVisible !== this._isVisible) {
-        this._isVisible = isVisible
-        const event = {
-          type: isVisible ? 'show' : 'hide',
-          timestamp: getTimestamp()
-        }
-        this.onEvent(event)
-      }
+      this._updateVisibleBitmask(1, isVisible) // 1 for intersection bit
     })
     this._intersectionObserver.observe(viewElement)
+
+    this._focusElement.addEventListener('focus', (ev) => {
+      if (this.wrapperElement) {
+        this.wrapperElement.classList.add('has-focus')
+      }
+      const event = {
+        type: 'focus_in',
+        timestamp: getTimestamp()
+      }
+      this.onEvent(event)
+    },
+    { signal }
+    )
+
+    this._focusElement.addEventListener('blur', (ev) => {
+      if (this.wrapperElement) {
+        this.wrapperElement.classList.remove('has-focus')
+      }
+      const event = {
+        type: 'focus_out',
+        timestamp: getTimestamp()
+      }
+      this.onEvent(event)
+    },
+    { signal }
+    )
+
+    if (this.butMinimizeElement) {
+      this.butMinimizeElement.addEventListener('click', (ev) => {
+        this.wrapperElement.classList.toggle('is-minimized')
+      },
+      { signal }
+      )
+    }
+
+    if (this.butCloseElement) {
+      this.butCloseElement.addEventListener('click', (ev) => {
+        this.close()
+      },
+      { signal }
+      )
+    }
 
     // ----- resize ---------------
 
@@ -445,6 +546,14 @@ class BaseRenderView {
         physicalHeight = Math.floor(lsize[1] * ratio)
       }
 
+      // Handle visibility. If zero-size we assume we're minimized or otherwise hidden; zero size is not valid.
+      if (!physicalHeight || !physicalWidth) {
+        this._updateVisibleBitmask(2, false) // 2 for non-zero-size bit
+        return
+      } else {
+        this._updateVisibleBitmask(2, true)
+      }
+
       // If the container element does not have its size set via its style, we set it to the logical size.
       const logicalWidth = physicalWidth / ratio
       const logicalHeight = physicalHeight / ratio
@@ -474,7 +583,7 @@ class BaseRenderView {
       this.onEvent(event)
     })
 
-    this._resizeObserver.observe(this.sizeElement)
+    this._resizeObserver.observe(this.viewElement)
 
     // ----- pointer ---------------
 
