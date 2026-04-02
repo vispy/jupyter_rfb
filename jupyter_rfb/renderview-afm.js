@@ -1,9 +1,16 @@
+/*************************************************************************************************
+  renderview-afm.js
+
+  The Anywidget Frontend Module for renderview.
+
+ *************************************************************************************************/
+
 /* global BaseRenderView getTimestamp */
 
 /**
- * An object that represents the model (wrapping the anywidget model object), that can have multiple views.
+ * An object that represents the model(wrapping the anywidget model object), that can have multiple views.
  */
-class RendercanvasAnywidgetModel {
+class RenderviewAnywidgetModel {
   constructor (anymodel) {
     this.anymodel = anymodel
     this.views = []
@@ -249,7 +256,7 @@ export default () => {
   let model
   return {
     initialize (ctx) {
-      model = new RendercanvasAnywidgetModel(ctx.model)
+      model = new RenderviewAnywidgetModel(ctx.model)
       // window.model = model // debug
       return () => { model.close() }
     },
