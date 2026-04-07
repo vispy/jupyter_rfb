@@ -16,10 +16,10 @@ from base64 import encodebytes
 from importlib.resources import files as resource_files
 
 import anywidget
-from IPython.display import display
+from IPython.display import display, HTML
 from traitlets import Bool, Dict, Int, Unicode
 
-from ._utils import array2compressed, RFBOutputContext, Snapshot
+from ._utils import array2compressed, RFBOutputContext
 
 
 def _load_js_and_css():
@@ -121,21 +121,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             names=["_frame_feedback", "_has_visible_views"],
         )
 
-        # def _repr_mimebundle_(self, **kwargs):
-        #     # Use default
-        #     result = anywidget.AnyWidget._repr_mimebundle_(self, **kwargs)
-        #     # Get dict to add more data
-        #     data = None
-        #     if isinstance(result, tuple):
-        #         data = result[0]
-        #     elif isinstance(result, dict):
-        #         data = result
-        #     # Add initial snapshot if we have it
-        #     if data and self._rfb_pending_snapshot_display and self._rfb_last_frame is not None:
-        #         data["text/html"] = self.snapshot()._repr_html_()
-        #         self._rfb_pending_snapshot_display = None  # no need to reload
-        # return result
-
     def print(self, *args, **kwargs):
         """Print to the widget's output area (for debugging purposes).
 
@@ -192,18 +177,6 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     # ---- drawing
 
-    # def display(self):
-    #     """Display the widget.
-
-    #     The benefit of using this (instead of using the widget as the last expression of a cell)
-    #     is that an html snapshot is added to the output. This happens either directly,
-    #     or on the next drawn frame (if no frames have been drawn yet).
-    #     """
-    #     self._rfb_pending_snapshot_display = True
-    #     id = display(self, display_id=True)
-    #     if self._rfb_pending_snapshot_display:  # i.e. is not set to None by __repr__
-    #         self._rfb_pending_snapshot_display = id
-
     def snapshot(self, pixel_ratio=None):
         """Render a frame and include the resulting image in the output.
 
@@ -234,30 +207,26 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             self._rfb_handle_msg(self, event, [])
 
         self._rfb_pending_snapshot_display = display(
-            "pending screenshot ...", display_id=True
+            HTML(
+                "<div style='display: inline-block; padding: 5px; border-radius: 5px; background:#ddd; color:#000'>pending screenshot ...</span>"
+            ),
+            display_id=True,
         )
         self.request_draw()
 
     def _replace_snapshot(self, array):
-        self.print("_replace_snapshot", self._rfb_last_resize_event)
-        if self._rfb_last_resize_event is None:
-            return
-            # self._rfb_handle_msg(self, {"type": "resize", "width"}, [])
-
         pending_display = self._rfb_pending_snapshot_display
         self._rfb_pending_snapshot_display = None
 
-        # Get the current size
-        ref_resize_event = self._rfb_last_resize_event
-        if ref_resize_event:
-            w = ref_resize_event["width"]
-            h = ref_resize_event["height"]
-        else:
-            css_width, css_height = self.css_width, self.css_height
-            w = float(css_width[:-2]) if css_width.endswith("px") else 500
-            h = float(css_height[:-2]) if css_height.endswith("px") else 300
-        snapshot = Snapshot(array, w, h, "snapshot")
-        pending_display.update(snapshot)
+        event = self._rfb_last_resize_event or {}
+        w = event.get("width", array.shape[1])
+        h = event.get("height", array.shape[0])
+
+        mimetype, data = array2compressed(array, 70)
+        src = f"data:image/{mimetype};base64," + encodebytes(data).decode()
+        html = f"<img src='{src}' style='width:{w}px;height:{h}px;' />"
+
+        pending_display.update(HTML(html))
 
     def request_draw(self):
         """Schedule a new draw. This method itself returns immediately.
