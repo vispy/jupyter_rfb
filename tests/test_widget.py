@@ -9,7 +9,6 @@ import time
 import numpy as np
 from pytest import raises
 from jupyter_rfb import RemoteFrameBuffer
-from jupyter_rfb._utils import Snapshot
 from traitlets import TraitError
 
 
@@ -300,18 +299,10 @@ def test_print():
 
 
 def test_snapshot():
-    """Test that the widget has a snapshot method that produces a Snapshot."""
+    """Test that the widget has a snapshot method."""
     w = MyRFB()
     s = w.snapshot()
-    assert isinstance(s, Snapshot)
-    assert s.data.shape == (1, 1, 3)
-
-    w.request_draw()
-    w._rfb_maybe_draw()  # similate first frame
-
-    s = w.snapshot()
-    assert isinstance(s, Snapshot)
-    assert np.all(s.data == w.get_frame())
+    assert s is None  # snapshot() uses display()
 
 
 def test_use_websocket():

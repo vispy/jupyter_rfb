@@ -71,3 +71,8 @@ class RFBOutputContext(ipywidgets.Output):
             err = "".join(traceback.format_exception(etype, value, tb))
             self.append_stderr(err)
             return True  # declare that we handled the exception
+
+
+def remove_rfb_models_from_nb(d):
+    """Deprecated, is a no-op for backwards compatibility."""
+    pass

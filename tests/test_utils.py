@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from jupyter_rfb._utils import array2compressed, RFBOutputContext, Snapshot
+from jupyter_rfb._utils import array2compressed, RFBOutputContext
 from jupyter_rfb import _jpg
 
 
@@ -113,23 +113,3 @@ def test_output_context():
     # The print is a proper print
     c.print("foo", "bar", sep="-", end=".")
     assert c.stdouts[-1] == "foo-bar."
-
-
-def test_snapshot():
-    """Test the Snapshot class."""
-
-    a = np.zeros((10, 10), np.uint8)
-
-    s = Snapshot(a, 5, 5, "footitle", "KLS")
-
-    # The get_array method returns the raw data
-    assert s.data is a
-
-    # Most importantly, it has a Jupyter mime data!
-    data = s._repr_mimebundle_()
-    assert "text/html" in data
-    html = data["text/html"]
-    assert "data:image/" in html  # looks like the png/jpg is in there
-    assert "width:5px" in html and "height:5px" in html  # logical size
-    assert "class='KLS'" in html  # css class name
-    assert "footitle" in html  # the title

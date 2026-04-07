@@ -214,6 +214,10 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         )
         self.request_draw()
 
+        # Note: It could be that _replace_snapshot() is called directly,
+        # (and _rfb_pending_snapshot_display set to None). But it could
+        # also be that it is called later. In any case, we just return None
+
     def _replace_snapshot(self, array):
         pending_display = self._rfb_pending_snapshot_display
         self._rfb_pending_snapshot_display = None
