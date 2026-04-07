@@ -16,7 +16,6 @@ from base64 import encodebytes
 from importlib.resources import files as resource_files
 
 import anywidget
-import numpy as np
 from IPython.display import display
 from traitlets import Bool, Dict, Int, Unicode
 
@@ -105,7 +104,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         display(self._output_context)
         # Init attributes for drawing
         self._rfb_last_frame = None
-        self._rfb_pending_display = None
+        self._rfb_pending_snapshot_display = None
         self._rfb_draw_requested = False
         self._rfb_frame_index = 0
         self._rfb_last_confirmed_index = 0
@@ -122,20 +121,20 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             names=["_frame_feedback", "_has_visible_views"],
         )
 
-    def _repr_mimebundle_(self, **kwargs):
-        # Use default
-        result = anywidget.AnyWidget._repr_mimebundle_(self, **kwargs)
-        # Get dict to add more data
-        data = None
-        if isinstance(result, tuple):
-            data = result[0]
-        elif isinstance(result, dict):
-            data = result
-        # Add initial snapshot if we have it
-        if data and self._rfb_pending_display and self._rfb_last_frame is not None:
-            data["text/html"] = self.snapshot()._repr_html_()
-            self._rfb_pending_display = None  # no need to reload
-        return result
+        # def _repr_mimebundle_(self, **kwargs):
+        #     # Use default
+        #     result = anywidget.AnyWidget._repr_mimebundle_(self, **kwargs)
+        #     # Get dict to add more data
+        #     data = None
+        #     if isinstance(result, tuple):
+        #         data = result[0]
+        #     elif isinstance(result, dict):
+        #         data = result
+        #     # Add initial snapshot if we have it
+        #     if data and self._rfb_pending_snapshot_display and self._rfb_last_frame is not None:
+        #         data["text/html"] = self.snapshot()._repr_html_()
+        #         self._rfb_pending_snapshot_display = None  # no need to reload
+        # return result
 
     def print(self, *args, **kwargs):
         """Print to the widget's output area (for debugging purposes).
@@ -155,7 +154,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         # When the widget is closed, we notify by creating a close event. The
         # same event is emitted from JS when the model is closed in the client.
         anywidget.AnyWidget.close(self, *args, **kwargs)
-        self._rfb_handle_msg(self, {"type": "close", "event_type": "close"}, [])
+        self._rfb_handle_msg(self, {"type": "close"}, [])
 
     def _rfb_handle_msg(self, widget, content, buffers):
         """Receive custom messages and filter our events."""
@@ -193,27 +192,61 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
 
     # ---- drawing
 
-    def display(self):
-        """Display the widget.
+    # def display(self):
+    #     """Display the widget.
 
-        The benefit of using this (instead of using the widget as the last expression of a cell)
-        is that an html snapshot is added to the output. This happens either directly,
-        or on the next drawn frame (if no frames have been drawn yet).
-        """
-        self._rfb_pending_display = True
-        id = display(self, display_id=True)
-        if self._rfb_pending_display:  # i.e. is not set to None by __repr__
-            self._rfb_pending_display = id
+    #     The benefit of using this (instead of using the widget as the last expression of a cell)
+    #     is that an html snapshot is added to the output. This happens either directly,
+    #     or on the next drawn frame (if no frames have been drawn yet).
+    #     """
+    #     self._rfb_pending_snapshot_display = True
+    #     id = display(self, display_id=True)
+    #     if self._rfb_pending_snapshot_display:  # i.e. is not set to None by __repr__
+    #         self._rfb_pending_snapshot_display = id
 
     def snapshot(self, pixel_ratio=None):
-        """Create a snapshot of the current state of the widget.
+        """Render a frame and include the resulting image in the output.
 
-        Returns an ``IPython DisplayObject`` that can simply be used as
-        a cell output. The display object has a ``data`` attribute that holds
-        the image array data (typically a numpy array).
+        An initial placeholder output is produced, which is replaced by an html
+        ``<img>`` as soon as the next frame is rendered.
 
-        The ``pixel_ratio`` argument is deprecated and ignored.
+        If the widget is not displayed yet, a resize event is emitted to mimic a widget
+        size. This happens at most once in the widget's lifetime. It will use the
+        ``css_width`` and ``css_height`` if they are expressed in ``px``, and otherwise
+        default to 500 or 300 pixels respectively. The ``pixel_ratio`` argument is then
+        used to calculate the physical size.
         """
+        if self._rfb_last_resize_event is None:
+            css_width, css_height = self.css_width, self.css_height
+            w = float(css_width[:-2]) if css_width.endswith("px") else 500
+            h = float(css_height[:-2]) if css_height.endswith("px") else 300
+            r = float(pixel_ratio) if pixel_ratio is not None else 1.0
+            pw, ph = int(w * r), (h * r)
+            event = {
+                "type": "resize",
+                "width": pw / r,
+                "height": ph / r,
+                "pwidth": pw,
+                "pheight": ph,
+                "ratio": r,
+                "timestamp": 0,
+            }
+            self._rfb_handle_msg(self, event, [])
+
+        self._rfb_pending_snapshot_display = display(
+            "pending screenshot ...", display_id=True
+        )
+        self.request_draw()
+
+    def _replace_snapshot(self, array):
+        self.print("_replace_snapshot", self._rfb_last_resize_event)
+        if self._rfb_last_resize_event is None:
+            return
+            # self._rfb_handle_msg(self, {"type": "resize", "width"}, [])
+
+        pending_display = self._rfb_pending_snapshot_display
+        self._rfb_pending_snapshot_display = None
+
         # Get the current size
         ref_resize_event = self._rfb_last_resize_event
         if ref_resize_event:
@@ -223,13 +256,8 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
             css_width, css_height = self.css_width, self.css_height
             w = float(css_width[:-2]) if css_width.endswith("px") else 500
             h = float(css_height[:-2]) if css_height.endswith("px") else 300
-        # Get last frame or single-pixel image
-        array = self._rfb_last_frame
-        if array is None:
-            array = np.ones((1, 1, 3), np.uint8) * 127
-        # Super-weird, but it looks like nbsphinx only selects the text/html field when we use a css class
-        # that starts with 'snapshot-'. Is this some upstream hack to make jupyter-rfb work, that we don't know of?
-        return Snapshot(array, w, h, "snapshot", f"snapshot-rfb model{self._model_id}")
+        snapshot = Snapshot(array, w, h, "snapshot")
+        pending_display.update(snapshot)
 
     def request_draw(self):
         """Schedule a new draw. This method itself returns immediately.
@@ -279,7 +307,7 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
         should_draw = (
             self._rfb_draw_requested
             and frames_in_flight < self.max_buffered_frames
-            and self._has_visible_views
+            and (self._has_visible_views or self._rfb_pending_snapshot_display)
         )
         # Do the draw if we should.
         if should_draw:
@@ -359,9 +387,8 @@ class RemoteFrameBuffer(anywidget.AnyWidget):
                 self._rfb_last_confirmed_index = self._rfb_frame_index - 1
 
         # Reload the output if we did not have a frame when the widget was first loaded
-        if self._rfb_pending_display is not None:
-            if self._rfb_last_resize_event is not None:
-                self._rfb_pending_display.update(self)  # -> calls _repr_mimebundle_
+        if self._rfb_pending_snapshot_display is not None:
+            self._replace_snapshot(array)
 
         # Compose message and send
         msg = dict(
