@@ -1,9 +1,7 @@
 import io
 import builtins
 import traceback
-from base64 import encodebytes
 
-from IPython.display import DisplayObject
 import ipywidgets
 
 from ._png import array2png
@@ -75,73 +73,6 @@ class RFBOutputContext(ipywidgets.Output):
             return True  # declare that we handled the exception
 
 
-class Snapshot(DisplayObject):
-    """An IPython DisplayObject representing an image snapshot.
-
-    The ``data`` attribute is the image array object. One could use
-    this to process the data further, e.g. storing it to disk.
-    """
-
-    # Not an IPython.display.Image, because we want to use some HTML to
-    # give it a custom css class and a title.
-
-    def __init__(self, data, width, height, title="snapshot", class_name=None):
-        super().__init__(data)
-        self.width = width
-        self.height = height
-        self.title = title
-        self.class_name = class_name
-
-    def _check_data(self):
-        assert hasattr(self.data, "shape") and hasattr(self.data, "dtype")
-
-    def _repr_mimebundle_(self, **kwargs):
-        return {"text/html": self._repr_html_()}
-
-    def _repr_html_(self):
-        # Convert to PNG
-        mimetype, data = array2compressed(self.data, 70)
-        src = f"data:image/{mimetype};base64," + encodebytes(data).decode()
-        # Create html repr
-        class_str = f"class='{self.class_name}'" if self.class_name else ""
-        img_style = f"width:{self.width}px;height:{self.height}px;"
-        tt_style = "position: absolute; top:0; left:0; padding:3px 4px; border-radius:0 0 4px 0;"
-        tt_style += (
-            "background: #777; color:#fff; font-size: 90%; font-family:sans-serif; "
-        )
-        html = f"""
-            <div {class_str} style='position:relative;'>
-                <img src='{src}' style='{img_style}' />
-                <div style='{tt_style}'>{self.title}</div>
-            </div>
-            """
-        return html.replace("\n", "").replace("    ", "").strip()
-
-
 def remove_rfb_models_from_nb(d):
-    """Remove the widget model output from a notebook dict.
-
-    Given a notebook as a dict (loaded using json), remove the widget
-    model output if there is also a text/html snapshot output.
-
-    This is to work around the fact that nbsphinx favors the model over
-    the text/html output. Which is sad, because that's where we put the
-    initial screenshot for offline viewing.
-    """
-
-    to_remove = set()
-    for key, val in d.items():
-        if key == "cells" and isinstance(val, list):
-            for v in val:
-                remove_rfb_models_from_nb(v)
-        elif key == "outputs" and isinstance(val, list):
-            for v in val:
-                data = v.get("data", None)
-                if data:
-                    remove_rfb_models_from_nb(data)
-        elif key == "application/vnd.jupyter.widget-view+json":
-            html_sibling = d.get("text/html", [])
-            if html_sibling and "<div class='snapshot-" in html_sibling[0]:
-                to_remove.add(key)
-    for key in to_remove:
-        d.pop(key)
+    """Deprecated, is a no-op for backwards compatibility."""
+    pass
